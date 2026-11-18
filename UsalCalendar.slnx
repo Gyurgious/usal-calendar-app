@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/server/">
+    <Project Path="server/UsalCalendar.Api/UsalCalendar.Api.csproj" />
+    <Project Path="server/UsalCalendar.Core/UsalCalendar.Core.csproj" />
+    <Project Path="server/UsalCalendar.Infrastructure/UsalCalendar.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/UsalCalendar.Tests/UsalCalendar.Tests.csproj" />
+  </Folder>
+</Solution>
