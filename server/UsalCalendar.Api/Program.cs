@@ -1,6 +1,7 @@
 using UsalCalendar.Api.Auth;
 using UsalCalendar.Api.ErrorHandling;
 using UsalCalendar.Infrastructure;
+using UsalCalendar.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +13,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddJwtAuthentication(builder.Configuration);
-// builder.Services.AddCore(); 
+builder.Services.AddCore(); 
 builder.Services.AddInfrastructure(
     builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("Connection string 'Default' is missing."));

@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using UsalCalendar.Infrastructure.Data;
+using UsalCalendar.Core.Interfaces;
+using UsalCalendar.Infrastructure.Repositories;
+using UsalCalendar.Infrastructure.Security;
 
 namespace UsalCalendar.Infrastructure;
 
@@ -10,8 +13,8 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
     {
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
-        // services.AddScoped<IEventRepository, EventRepository>();   ← add as each slice gets built
-        // services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         return services;
     }
 }
