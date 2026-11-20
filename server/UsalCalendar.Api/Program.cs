@@ -24,7 +24,7 @@ var app = builder.Build(); // build pipleline (steps every HTTP request passes t
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi().AllowAnonymous();
     await app.Services.MigrateAndSeedAsync();
 }
 

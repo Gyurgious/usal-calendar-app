@@ -1,6 +1,17 @@
-@UsalCalendar.Api_HostAddress = http://localhost:5129
+@host = http://localhost:5080
 
-GET {{UsalCalendar.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Sign in (copy the token from the response)
+POST {{host}}/api/auth/login
+Content-Type: application/json
 
-###
+{ "logonName": "admin", "password": "Admin123!" }
+
+### Wrong password → 401
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "logonName": "admin", "password": "wrong" }
+
+### Current user (paste the token after "Bearer ")
+GET {{host}}/api/auth/me
+Authorization: Bearer PASTE_TOKEN_HERE
