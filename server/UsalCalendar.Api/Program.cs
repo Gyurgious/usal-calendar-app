@@ -2,6 +2,7 @@ using UsalCalendar.Api.Auth;
 using UsalCalendar.Api.ErrorHandling;
 using UsalCalendar.Infrastructure;
 using UsalCalendar.Core;
+using UsalCalendar.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,7 @@ var app = builder.Build(); // build pipleline (steps every HTTP request passes t
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    // await app.Services.MigrateAndSeedAsync();   ← once DbSeeder exists
+    await app.Services.MigrateAndSeedAsync();
 }
 
 app.UseExceptionHandler();
