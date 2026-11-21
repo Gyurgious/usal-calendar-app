@@ -1,13 +1,13 @@
-import { createBrowserRouter, Navigate } from 'react-router'
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router'
 import { LoginPage } from '../features/auth/LoginPage'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { CalendarPage } from '../features/calendar/CalendarPage'
 import { AppLayout } from './AppLayout'
 
-export const router = createBrowserRouter([
+// Exported separately so tests can reuse the exact same routes with an in-memory router.
+export const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
   {
-    // Everything below requires sign-in.
     element: <RequireAuth />,
     children: [
       {
@@ -17,4 +17,6 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '*', element: <Navigate to="/" replace /> },
-])
+]
+
+export const router = createBrowserRouter(routes)
