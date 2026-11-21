@@ -2,11 +2,18 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { Alert, Button, Card, Container, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
-import { login } from './authApi'
+import { Navigate, useLocation, useNavigate, type Location } from 'react-router'
+import { useAuth } from './AuthContext'
 import { loginSchema, type LoginFormValues } from './loginSchema'
 
 export function LoginPage() {
+  const { status, signIn } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [serverError, setServerError] = useState<string | null>(null)
+
+  // Where RequireAuth sent us from (e.g. a bookmarked page), otherwise the calendar.
+  const redirectTo = (location.state as { from?: Location } | null)?.from?.pathname ?? '/'
 
   const {
     register,
@@ -20,12 +27,16 @@ export function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     setServerError(null)
     try {
-      const result = await login(values)
-      // Temporary: Part D replaces this with AuthContext + redirect to the calendar.
-      console.log('Signed in as', result.user.displayName)
+      await signIn(values.logonName, values.password)
+      navigate(redirectTo, { replace: true })
     } catch (error) {
       setServerError(error instanceof Error ? error.message : 'Sign-in failed.')
     }
+  }
+
+   // Already signed in (e.g. the user typed /login): go straight to the app.
+  if (status === 'authenticated') {
+    return <Navigate to={redirectTo} replace />
   }
 
   return (
