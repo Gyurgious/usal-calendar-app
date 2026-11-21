@@ -1,0 +1,5 @@
+# Test-only analyzer settings (applies to everything under tests/)
+
+[*.cs]
+# Test names use underscores by convention: Method_Scenario_ExpectedResult
+dotnet_diagnostic.CA1707.severity = none
