@@ -9,7 +9,7 @@ export function jsonResponse(status: number, body: unknown): Response {
 }
 
 export function mockFetch() {
-  const fetchMock = vi.fn<typeof fetch>()
+  const fetchMock = vi.fn<typeof fetch>(async () => jsonResponse(200, []))
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
 }

@@ -29,7 +29,8 @@ There are exactly **two security levels**:
 | View calendar (month & day views) | ✅ | ✅ |
 | Submit event for approval (two-step) | ✅ | n/a |
 | Add event directly to calendar (one-step, auto-approved) | ❌ | ✅ |
-| View pending submissions | ❌ (own submissions only, optional) | ✅ |
+| View pending events on the calendar (grayed out) | Own only | ✅ All |
+| Withdraw own pending submission | ✅ | ✅ |
 | Approve / delete pending submissions | ❌ | ✅ |
 | Edit / delete displayed (approved) events | ❌ | ✅ |
 | Create / read / update / delete users | ❌ | ✅ |
@@ -101,7 +102,7 @@ Validate on **both client and server**. The server is the source of truth.
 
 Notes:
 - "Printable characters" = ASCII 0x20–0x7E. Trim leading/trailing whitespace before validating required fields.
-- V9 applies only to **approved** events. Pending submissions do not count toward the cap, but approving one onto a full day must fail with a clear message.
+- V9 applies only to **approved** events. Pending submissions do not count toward the cap, even though they are shown on the calendar. Approving one onto a full day must fail with a clear message.
 
 ---
 
@@ -126,6 +127,11 @@ Notes:
 - Approvers see Edit / Delete actions per event.
 
 **Toggle:** A visible Month | Day switch keeps the currently selected date when switching views.
+
+### 5.3a Pending Events on the Calendar (confirmed with PM)
+- Pending (unapproved) events appear in both Month and Day views, **visually distinct** from approved events: grayed out and italic, with a "Pending" label. They are sorted by time together with approved events.
+- **Visibility:** a normal user sees their **own** pending events. Approvers see **all** pending events. *(Assumption. Confirm with PM whether everyone should see all pending events.)*
+- **Withdraw:** the creator can withdraw (delete) their own event **while it is still pending**, from the Day view. Once approved, only an approver can delete it.
 
 > Fallback (BR4): if a full calendar grid is too difficult, start with a simple grid/table of events, then upgrade.
 
@@ -168,11 +174,12 @@ All endpoints except `/api/auth/login` require a valid JWT. 🔒 = Approver only
 |---|---|---|
 | POST | `/api/auth/login` | Returns JWT + user info |
 | GET | `/api/auth/me` | Current user |
-| GET | `/api/events?from=&to=&status=approved` | Approved events in a date range (calendar) |
+| GET | `/api/events?from=&to=` | Calendar events in a date range: approved, plus the pending events the caller may see (§5.3a). Each has `isApproved` |
 | GET | `/api/events/{id}` | Event details |
 | POST | `/api/events` | Create. Pending if normal user, auto-approved if approver |
 | PUT | `/api/events/{id}` 🔒 | Update event (re-checks daily cap) |
 | DELETE | `/api/events/{id}` 🔒 | Delete event |
+| POST | `/api/events/{id}/withdraw` | Creator withdraws their own **pending** event (403 if not the creator, 409 if already approved) |
 | GET | `/api/events/pending` 🔒 | List pending submissions |
 | POST | `/api/events/{id}/approve` 🔒 | Approve (enforces daily cap) |
 | PATCH | `/api/events/{id}/move` 🔒 | Drag & drop date/time change (optional) |
@@ -252,7 +259,8 @@ cd client && npm test
 
 **Required**
 - [ ] Sign in / sign out with logon name + password
-- [ ] Normal user can submit an event; it appears in Pending, not on the calendar
+- [ ] Normal user can submit an event; it appears in Pending and on the calendar **grayed out** (not counted toward the daily cap)
+- [ ] Creator can **withdraw** their own pending event
 - [ ] Approver can add an event that appears on the calendar immediately
 - [ ] Approver can approve or delete pending events
 - [ ] Month view: time, title, location; scroll months; sorted by time

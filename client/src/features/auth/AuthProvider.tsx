@@ -3,17 +3,20 @@ import { setUnauthorizedHandler } from '../../api/httpClient'
 import { tokenStorage } from '../../api/tokenStorage'
 import { getCurrentUser, login, type CurrentUser } from './authApi'
 import { AuthContext, type AuthContextValue, type AuthStatus } from './AuthContext'
+import { useQueryClient } from '@tanstack/react-query'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null)
-  // With a saved token we must ask the server who we are before showing anything.
   const [status, setStatus] = useState<AuthStatus>(() => (tokenStorage.get() ? 'loading' : 'anonymous'))
+
+  const queryClient = useQueryClient()
 
   const signOut = useCallback(() => {
     tokenStorage.clear()
+    queryClient.clear() // drop cached data so the next user never sees the previous user's events
     setUser(null)
     setStatus('anonymous')
-  }, [])
+  }, [queryClient])
 
   const signIn = useCallback(async (logonName: string, password: string) => {
     const result = await login({ logonName, password })

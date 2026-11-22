@@ -1,23 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { routes } from '../../app/router'
 import { jsonResponse, mockFetch } from '../../test/fetchMock'
-import { AuthProvider } from './AuthProvider'
+import { renderApp } from '../../test/renderApp'
 
 const admin = { id: 1, displayName: 'Thompson, Margaret A', isApprover: true }
-
-/** Renders the whole app (real routes + AuthProvider) starting at `path`. */
-function renderApp(path: string) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] })
-  render(
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>,
-  )
-  return router
-}
 
 let fetchMock: ReturnType<typeof mockFetch>
 

@@ -1,0 +1,50 @@
+/* Month grid: 7 equal columns, tall cells, events listed from the top. */
+.calendar-month {
+  table-layout: fixed;
+}
+
+.calendar-month th {
+  text-align: center;
+  font-weight: 600;
+}
+
+.calendar-month td {
+  height: 8rem;
+  padding: 0.25rem;
+  vertical-align: top;
+  cursor: pointer;
+}
+
+.calendar-month td:hover {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.calendar-day-number {
+  border: 0;
+  background: none;
+  color: inherit;
+  padding: 0 0.35rem;
+  border-radius: 1rem;
+  font-weight: 600;
+}
+
+.calendar-month td.is-outside-month {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.calendar-month td.is-outside-month > * {
+  opacity: 0.3;
+}
+
+.calendar-day-number.is-today {
+  background-color: var(--bs-primary);
+  color: var(--bs-white);
+}
+
+.calendar-event {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
