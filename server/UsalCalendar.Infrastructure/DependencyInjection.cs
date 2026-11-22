@@ -15,6 +15,8 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+        services.AddScoped<IEventRepository, EventRepository>();
+
         return services;
     }
 }
