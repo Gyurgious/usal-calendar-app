@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Alert, Spinner } from 'react-bootstrap'
 import { useSearchParams } from 'react-router'
+import { EventFormModal } from '../events/EventFormModal'
+import type { CalendarEvent } from './calendarApi'
 import { CalendarToolbar } from './CalendarToolbar'
 import { getVisibleRange, parseIsoDate, shiftDate, toIsoDate, type CalendarView } from './calendarDates'
 import { DayView } from './DayView'
@@ -14,6 +16,8 @@ import { useCalendarEvents } from './useCalendarEvents'
 export function CalendarPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [today] = useState(() => new Date()) // read the clock once, not on every render
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const view: CalendarView = searchParams.get('view') === 'day' ? 'day' : 'month'
   const date = parseIsoDate(searchParams.get('date')) ?? today
 
@@ -22,6 +26,16 @@ export function CalendarPage() {
 
   const show = (nextView: CalendarView, nextDate: Date) =>
     setSearchParams({ view: nextView, date: toIsoDate(nextDate) })
+
+    const handleCreated = (created: CalendarEvent) => {
+    setIsFormOpen(false)
+    setSuccessMessage(
+      created.isApproved
+        ? `"${created.title}" was added to the calendar.`
+        : `"${created.title}" was submitted for approval. It appears grayed out until an approver approves it.`,
+    )
+    show(view, parseIsoDate(created.date) ?? date) // jump to the new event's date so the user sees it
+  }
 
   return (
     <>
@@ -32,8 +46,17 @@ export function CalendarPage() {
         onToday={() => show(view, new Date())}
         onNext={() => show(view, shiftDate(view, date, 1))}
         onViewChange={(nextView) => show(nextView, date)} // keeps the selected date
+        onNewEvent={() => {
+          setSuccessMessage(null)
+          setIsFormOpen(true)
+        }}
       />
 
+      {successMessage && (
+        <Alert variant="success" dismissible onClose={() => setSuccessMessage(null)}>
+          {successMessage}
+        </Alert>
+      )}
       {isError && <Alert variant="danger">Could not load events: {error.message}</Alert>}
 
       {isPending ? (
@@ -44,6 +67,14 @@ export function CalendarPage() {
         <MonthView date={date} events={events} onSelectDay={(day) => show('day', day)} />
       ) : (
         <DayView events={events} />
+      )}
+
+       {isFormOpen && (
+        <EventFormModal
+          defaultDate={toIsoDate(date)}
+          onClose={() => setIsFormOpen(false)}
+          onCreated={handleCreated}
+        />
       )}
     </>
   )

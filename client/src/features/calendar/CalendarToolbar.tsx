@@ -9,10 +9,19 @@ interface CalendarToolbarProps {
   onToday: () => void
   onNext: () => void
   onViewChange: (view: CalendarView) => void
+  onNewEvent: () => void
 }
 
 /** Prev / Today / Next, the current title, and the Month | Day toggle. */
-export function CalendarToolbar({ view, date, onPrevious, onToday, onNext, onViewChange }: CalendarToolbarProps) {
+export function CalendarToolbar({ 
+  view, 
+  date, 
+  onPrevious, 
+  onToday, 
+  onNext, 
+  onViewChange, 
+  onNewEvent,
+}: CalendarToolbarProps) {
   const unit = view === 'month' ? 'month' : 'day'
 
   return (
@@ -49,6 +58,11 @@ export function CalendarToolbar({ view, date, onPrevious, onToday, onNext, onVie
           Day
         </Button>
       </ButtonGroup>
+
+      <Button variant="success" onClick={onNewEvent}>
+        + New event
+      </Button>
     </div>
+
   )
 }
