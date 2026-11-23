@@ -1,5 +1,6 @@
 using UsalCalendar.Core.Entities;
 using UsalCalendar.Core.Interfaces;
+using UsalCalendar.Core.Models;
 
 namespace UsalCalendar.Tests.Fakes;
 
@@ -24,8 +25,11 @@ internal sealed class FakeEventRepository : IEventRepository
             .OrderBy(e => e.Date).ThenBy(e => e.Time)
             .ToList());
 
-    public Task<IReadOnlyList<CalendarEvent>> GetPendingAsync(CancellationToken ct = default) =>
-        Task.FromResult<IReadOnlyList<CalendarEvent>>(Events.Where(e => !e.IsApproved).ToList());
+    public Task<IReadOnlyList<CalendarEvent>> GetAllAsync(EventStatus? status, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<CalendarEvent>>(Events
+            .Where(e => status == null || e.IsApproved == (status == EventStatus.Approved))
+            .OrderBy(e => e.Date).ThenBy(e => e.Time)
+            .ToList());
 
     public Task<int> CountApprovedOnDateAsync(DateOnly eventDate, int? excludeEventId = null, CancellationToken ct = default) =>
         Task.FromResult(Events.Count(e => e.Date == eventDate && e.IsApproved && e.Id != excludeEventId));
