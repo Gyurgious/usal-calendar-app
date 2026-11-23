@@ -45,11 +45,35 @@ public sealed class EventService(IEventRepository events, IUserRepository users,
         return calendarEvent;
     }
 
-    /// <summary>Pending submissions for the approvals list, sorted by date then time.</summary>
     public Task<IReadOnlyList<CalendarEvent>> GetPendingAsync(CancellationToken ct = default) =>
-        events.GetPendingAsync(ct);
+        events.GetAllAsync(EventStatus.Pending, ct);
 
-    /// <summary>Approves a pending event (approvers only, enforced by the API). Respects the daily cap (V9).</summary>
+        /// <summary>The events list for approvers: everything, or only approved/pending events.</summary>
+    public Task<IReadOnlyList<CalendarEvent>> GetAllAsync(EventStatus? status, CancellationToken ct = default) =>
+        events.GetAllAsync(status, ct);
+
+    /// <summary>One event with its creator and approver. Throws NotFoundException if it doesn't exist.</summary>
+    public Task<CalendarEvent> GetByIdAsync(int eventId, CancellationToken ct = default) =>
+        GetExistingAsync(eventId, ct);
+
+    public async Task<CalendarEvent> UpdateAsync(int eventId, EventDetails details, CancellationToken ct = default)
+    {
+        var calendarEvent = await GetExistingAsync(eventId, ct);
+        if (calendarEvent.IsApproved)
+        {
+            // Exclude this event, so saving it on its own (full) day still works.
+            await EnsureDayHasRoomAsync(details.Date, excludeEventId: calendarEvent.Id, ct);
+        }
+
+        calendarEvent.Title = details.Title.Trim();
+        calendarEvent.Description = TrimToNull(details.Description);
+        calendarEvent.Location = TrimToNull(details.Location);
+        calendarEvent.Date = details.Date;
+        calendarEvent.Time = details.Time;
+        await events.SaveChangesAsync(ct);
+        return calendarEvent;
+    }
+
     public async Task<CalendarEvent> ApproveAsync(int eventId, int approverId, CancellationToken ct = default)
     {
         var calendarEvent = await GetExistingAsync(eventId, ct);

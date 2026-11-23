@@ -36,8 +36,28 @@ public sealed record PendingEventDto(
     internal static DateTime AsUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }
 
+/// <summary>An event with everything an approver needs: status, creator, approver and both timestamps.</summary>
+public sealed record ManagedEventDto(
+    int Id,
+    string Title,
+    string? Location,
+    string? Description,
+    DateOnly Date,
+    TimeOnly Time,
+    bool IsApproved,
+    string CreatorName,
+    DateTime CreatedAtUtc,
+    string? ApproverName,
+    DateTime? ApprovedAtUtc)
+{
+    public static ManagedEventDto FromEntity(CalendarEvent e) => new(
+        e.Id, e.Title, e.Location, e.Description, e.Date, e.Time, e.IsApproved,
+        e.Creator.DisplayName, UtcDates.AsUtc(e.CreatedAtUtc),
+        e.Approver?.DisplayName, e.ApprovedAtUtc is { } approvedAt ? UtcDates.AsUtc(approvedAt) : null);
+}
+
 /// <summary>POST /api/events body. Validation rules V4 (location), V5 (title), V6 (description).</summary>
-public sealed record CreateEventRequest(
+public sealed record EventRequest(
     [Required]
     [StringLength(ValidationRules.TitleMaxLength)]
     [RegularExpression(ValidationRules.PrintableRegex, ErrorMessage = ValidationMessages.Printable)]
@@ -62,4 +82,10 @@ public sealed record CreateEventRequest(
 internal static class ValidationMessages
 {
     public const string Printable = "{0} can only contain printable characters.";
+}
+
+// date converter
+internal static class UtcDates
+{
+    public static DateTime AsUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }

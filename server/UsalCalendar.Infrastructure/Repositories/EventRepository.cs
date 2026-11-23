@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using UsalCalendar.Core.Entities;
 using UsalCalendar.Core.Interfaces;
 using UsalCalendar.Infrastructure.Data;
+using UsalCalendar.Core.Models;
 
 namespace UsalCalendar.Infrastructure.Repositories;
 
@@ -25,11 +26,14 @@ internal sealed class EventRepository(AppDbContext db) : IEventRepository
             .ThenBy(e => e.Time)
             .ToListAsync(ct);
 
-    public async Task<IReadOnlyList<CalendarEvent>> GetPendingAsync(CancellationToken ct = default) =>
+        public async Task<IReadOnlyList<CalendarEvent>> GetAllAsync(EventStatus? status, CancellationToken ct = default) =>
         await db.Events
             .AsNoTracking()
             .Include(e => e.Creator)
-            .Where(e => e.ApproverId == null)
+            .Include(e => e.Approver)
+            .Where(e => status == null
+                        || (status == EventStatus.Approved && e.ApproverId != null)
+                        || (status == EventStatus.Pending && e.ApproverId == null))
             .OrderBy(e => e.Date)
             .ThenBy(e => e.Time)
             .ToListAsync(ct);
