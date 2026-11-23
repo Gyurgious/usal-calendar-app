@@ -20,6 +20,22 @@ public sealed record CalendarEventDto(
         e.Id, e.Title, e.Location, e.Description, e.Date, e.Time, e.CreatorId, e.Creator.DisplayName, e.IsApproved);
 }
 
+/// <summary>One row of the Pending Approvals table (spec 5.5).</summary>
+public sealed record PendingEventDto(
+    int Id,
+    string Title,
+    string? Location,
+    string? Description,
+    DateOnly Date,
+    TimeOnly Time,
+    string CreatorName,
+    DateTime CreatedAtUtc)
+{
+    public static PendingEventDto FromEntity(CalendarEvent e) => new(
+        e.Id, e.Title, e.Location, e.Description, e.Date, e.Time, e.Creator.DisplayName, AsUtc(e.CreatedAtUtc));
+    internal static DateTime AsUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
+}
+
 /// <summary>POST /api/events body. Validation rules V4 (location), V5 (title), V6 (description).</summary>
 public sealed record CreateEventRequest(
     [Required]

@@ -45,6 +45,70 @@ public sealed class EventService(IEventRepository events, IUserRepository users,
         return calendarEvent;
     }
 
+    /// <summary>Pending submissions for the approvals list, sorted by date then time.</summary>
+    public Task<IReadOnlyList<CalendarEvent>> GetPendingAsync(CancellationToken ct = default) =>
+        events.GetPendingAsync(ct);
+
+    /// <summary>Approves a pending event (approvers only, enforced by the API). Respects the daily cap (V9).</summary>
+    public async Task<CalendarEvent> ApproveAsync(int eventId, int approverId, CancellationToken ct = default)
+    {
+        var calendarEvent = await GetExistingAsync(eventId, ct);
+        if (calendarEvent.IsApproved)
+        {
+            throw new BusinessRuleException($"\"{calendarEvent.Title}\" is already approved.");
+        }
+
+        await EnsureDayHasRoomAsync(calendarEvent.Date, excludeEventId: null, ct);
+
+        var approver = await users.GetByIdAsync(approverId, ct)
+                       ?? throw new NotFoundException($"User {approverId} was not found.");
+        calendarEvent.Approve(approver, clock.GetUtcNow().UtcDateTime);
+        await events.SaveChangesAsync(ct);
+        return calendarEvent;
+    }
+
+    // removes event. (approvers can delete any event, normal users can only withdraw their own pending event)
+    public async Task DeleteAsync(int eventId, int userId, bool isApprover, CancellationToken ct = default)
+    {
+        var calendarEvent = await GetExistingAsync(eventId, ct);
+        if (!isApprover)
+        {
+            if (calendarEvent.CreatorId != userId)
+            {
+                throw new ForbiddenException("You can only withdraw events you submitted.");
+            }
+            if (calendarEvent.IsApproved)
+            {
+                throw new BusinessRuleException(
+                    $"\"{calendarEvent.Title}\" is already approved and can no longer be withdrawn. Ask an approver to delete it.");
+            }
+        }
+
+        events.Remove(calendarEvent);
+        await events.SaveChangesAsync(ct);
+    }
+
+    /// <summary>The creator takes back their own submission, but only while it is still pending.</summary>
+    public async Task WithdrawAsync(int eventId, int userId, CancellationToken ct = default)
+    {
+        var calendarEvent = await GetExistingAsync(eventId, ct);
+        if (calendarEvent.CreatorId != userId)
+        {
+            throw new ForbiddenException("You can only withdraw events you submitted.");
+        }
+        if (calendarEvent.IsApproved)
+        {
+            throw new BusinessRuleException(
+                $"\"{calendarEvent.Title}\" is already approved and can no longer be withdrawn. Ask an approver to delete it.");
+        }
+
+        events.Remove(calendarEvent);
+        await events.SaveChangesAsync(ct);
+    }
+
+    private async Task<CalendarEvent> GetExistingAsync(int eventId, CancellationToken ct) =>
+        await events.GetByIdAsync(eventId, ct) ?? throw new NotFoundException($"Event {eventId} was not found.");
+
     /// <summary>V9: a day can hold at most 10 approved events. Pending events don't count.</summary>
     private async Task EnsureDayHasRoomAsync(DateOnly date, int? excludeEventId, CancellationToken ct)
     {

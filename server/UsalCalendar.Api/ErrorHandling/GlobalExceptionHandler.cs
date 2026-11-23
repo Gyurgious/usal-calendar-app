@@ -14,6 +14,7 @@ internal sealed partial class GlobalExceptionHandler(
         var (status, title) = exception switch
         {
             NotFoundException => (StatusCodes.Status404NotFound, "Not found"),
+            ForbiddenException => (StatusCodes.Status403Forbidden, "Not allowed"),
             BusinessRuleException => (StatusCodes.Status409Conflict, "Request conflicts with a business rule"),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred"),
         };
