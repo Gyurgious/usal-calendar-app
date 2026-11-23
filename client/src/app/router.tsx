@@ -1,5 +1,7 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router'
+import { ApprovalsPage } from '../features/approvals/ApprovalsPage'
 import { LoginPage } from '../features/auth/LoginPage'
+import { RequireApprover } from '../features/auth/RequireApprover'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { CalendarPage } from '../features/calendar/CalendarPage'
 import { AppLayout } from './AppLayout'
@@ -12,7 +14,14 @@ export const routes: RouteObject[] = [
     children: [
       {
         element: <AppLayout />,
-        children: [{ index: true, element: <CalendarPage /> }],
+        children: [
+          { index: true, element: <CalendarPage /> },
+          {
+            // Approver-only pages. The API enforces the same rule with the "Approver" policy.
+            element: <RequireApprover />,
+            children: [{ path: 'approvals', element: <ApprovalsPage /> }],
+          },
+        ],
       },
     ],
   },

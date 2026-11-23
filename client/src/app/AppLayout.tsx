@@ -19,6 +19,11 @@ export function AppLayout() {
               <Nav.Link as={NavLink} to="/" end>
                 Calendar
               </Nav.Link>
+                {user?.isApprover && (
+                <Nav.Link as={NavLink} to="/approvals">
+                  Approvals
+                </Nav.Link>
+              )}
             </Nav>
             <Navbar.Text className="me-3">
               {user?.displayName}{' '}
