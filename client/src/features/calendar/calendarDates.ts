@@ -19,7 +19,6 @@ export function toIsoDate(date: Date): string {
   return format(date, 'yyyy-MM-dd')
 }
 
-/** "2026-11-05" → Date (local midnight), or null if missing or invalid. */
 export function parseIsoDate(value: string | null): Date | null {
   if (!value) {
     return null
@@ -28,9 +27,16 @@ export function parseIsoDate(value: string | null): Date | null {
   return isValid(date) ? date : null
 }
 
-/** "15:30:00" → "3:30 PM" */
 export function formatTime(time: string): string {
   return format(parse(time, 'HH:mm:ss', new Date()), 'h:mm a')
+}
+
+export function formatLongDate(isoDate: string): string {
+  return format(parse(isoDate, 'yyyy-MM-dd', new Date()), 'EEE, MMM d, yyyy')
+}
+
+export function formatTimestamp(utc: string): string {
+  return format(new Date(utc), 'MMM d, yyyy h:mm a')
 }
 
 /** The month grid: full weeks (Sunday–Saturday) covering the whole month. 4 to 6 rows of 7 days. */

@@ -11,6 +11,7 @@ import { getVisibleRange, parseIsoDate, shiftDate, toIsoDate, type CalendarView 
 import { DayView } from './DayView'
 import { MonthView } from './MonthView'
 import { useCalendarEvents } from './useCalendarEvents'
+import type { ManagedEvent } from '../events/eventsApi'
 
 type Message = { variant: 'success' | 'danger'; text: string }
 
@@ -35,7 +36,7 @@ export function CalendarPage() {
   const show = (nextView: CalendarView, nextDate: Date) =>
     setSearchParams({ view: nextView, date: toIsoDate(nextDate) })
 
-  const handleCreated = (created: CalendarEvent) => {
+  const handleCreated = (created: CalendarEvent | ManagedEvent) => {
     setIsFormOpen(false)
     setMessage({
       variant: 'success',
@@ -95,7 +96,7 @@ export function CalendarPage() {
         <EventFormModal
           defaultDate={toIsoDate(date)}
           onClose={() => setIsFormOpen(false)}
-          onCreated={handleCreated}
+          onSaved={handleCreated}
         />
       )}
 

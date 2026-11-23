@@ -15,14 +15,19 @@ export function AppLayout() {
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="main-nav" />
           <Navbar.Collapse id="main-nav">
-            <Nav className="me-auto">
+           <Nav className="me-auto">
               <Nav.Link as={NavLink} to="/" end>
                 Calendar
               </Nav.Link>
-                {user?.isApprover && (
-                <Nav.Link as={NavLink} to="/approvals">
-                  Approvals
-                </Nav.Link>
+              {user?.isApprover && (
+                <>
+                  <Nav.Link as={NavLink} to="/approvals">
+                    Approvals
+                  </Nav.Link>
+                  <Nav.Link as={NavLink} to="/events">
+                    Events
+                  </Nav.Link>
+                </>
               )}
             </Nav>
             <Navbar.Text className="me-3">

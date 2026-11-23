@@ -6,18 +6,23 @@ import { LIMITS } from '../../shared/validation/patterns'
 import { useAuth } from '../auth/AuthContext'
 import type { CalendarEvent } from '../calendar/calendarApi'
 import { eventSchema, type EventFormValues } from './eventSchema'
+import type { ManagedEvent } from './eventsApi'
 import { useCreateEvent } from './useCreateEvent'
+import { useUpdateEvent } from './useEventActions'
 
 interface EventFormModalProps {
-  defaultDate: string // "yyyy-MM-dd"
+  /** Give an event to edit it. Leave it out to create a new one. */
+  event?: ManagedEvent
+  defaultDate?: string
   onClose: () => void
-  onCreated: (event: CalendarEvent) => void
+  onSaved: (event: CalendarEvent | ManagedEvent) => void
 }
 
-/** "New event" form. Normal users submit for approval; approvers add directly to the calendar. */
-export function EventFormModal({ defaultDate, onClose, onCreated }: EventFormModalProps) {
+/** "New event" and "Edit event" form. Same fields and rules for both. */
+export function EventFormModal({ event, defaultDate = '', onClose, onSaved }: EventFormModalProps) {
   const { user } = useAuth()
   const createEvent = useCreateEvent()
+  const updateEvent = useUpdateEvent()
   const [serverError, setServerError] = useState<string | null>(null)
   const isApprover = user?.isApprover ?? false
 
@@ -27,37 +32,57 @@ export function EventFormModal({ defaultDate, onClose, onCreated }: EventFormMod
     formState: { errors, isSubmitting },
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
-    defaultValues: { title: '', location: '', description: '', date: defaultDate, time: '' },
+    defaultValues: event
+      ? {
+          title: event.title,
+          location: event.location ?? '',
+          description: event.description ?? '',
+          date: event.date,
+          time: event.time.slice(0, 5), // "15:30:00" → "15:30"
+        }
+      : { title: '', location: '', description: '', date: defaultDate, time: '' },
   })
 
   const onSubmit = async (values: EventFormValues) => {
     setServerError(null)
+    const request = {
+      ...values,
+      location: values.location || null,
+      description: values.description || null,
+    }
     try {
-      const created = await createEvent.mutateAsync({
-        ...values,
-        location: values.location || null,
-        description: values.description || null,
-      })
-      onCreated(created)
+      const saved = event
+        ? await updateEvent.mutateAsync({ id: event.id, request })
+        : await createEvent.mutateAsync(request)
+      onSaved(saved)
     } catch (error) {
       // e.g. 409 "December 1, 2026 already has 10 approved events. Please choose another day."
       setServerError(error instanceof Error ? error.message : 'Could not save the event.')
     }
   }
 
+  let helpText: string
+  if (event) {
+    helpText = event.isApproved
+      ? 'This event is approved. It can only move to a day with fewer than 10 approved events.'
+      : 'This event is still pending. Saving your changes does not approve it.'
+  } else {
+    helpText = isApprover
+      ? 'As an approver, your event is added to the calendar immediately.'
+      : 'Your event will be submitted for approval. Until then it appears grayed out on your calendar.'
+  }
+
+  const submitLabel = event ? 'Save changes' : isApprover ? 'Add event' : 'Submit for approval'
+
   return (
     <Modal show onHide={onClose} centered>
       <Form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Modal.Header closeButton>
-          <Modal.Title>New event</Modal.Title>
+          <Modal.Title>{event ? 'Edit event' : 'New event'}</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
-          <p className="text-body-secondary small">
-            {isApprover
-              ? 'As an approver, your event is added to the calendar immediately.'
-              : 'Your event will be submitted for approval. Until then it appears grayed out on your calendar.'}
-          </p>
+          <p className="text-body-secondary small">{helpText}</p>
 
           {serverError && <Alert variant="danger">{serverError}</Alert>}
 
@@ -104,7 +129,7 @@ export function EventFormModal({ defaultDate, onClose, onCreated }: EventFormMod
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving…' : isApprover ? 'Add event' : 'Submit for approval'}
+            {isSubmitting ? 'Saving…' : submitLabel}
           </Button>
         </Modal.Footer>
       </Form>

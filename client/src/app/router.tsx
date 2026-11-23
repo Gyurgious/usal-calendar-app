@@ -5,6 +5,8 @@ import { RequireApprover } from '../features/auth/RequireApprover'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { CalendarPage } from '../features/calendar/CalendarPage'
 import { AppLayout } from './AppLayout'
+import { EventDetailsPage } from '../features/events/EventDetailsPage'
+import { EventsPage } from '../features/events/EventsPage'
 
 // Exported separately so tests can reuse the exact same routes with an in-memory router.
 export const routes: RouteObject[] = [
@@ -19,7 +21,11 @@ export const routes: RouteObject[] = [
           {
             // Approver-only pages. The API enforces the same rule with the "Approver" policy.
             element: <RequireApprover />,
-            children: [{ path: 'approvals', element: <ApprovalsPage /> }],
+             children: [
+              { path: 'approvals', element: <ApprovalsPage /> },
+              { path: 'events', element: <EventsPage /> },
+              { path: 'events/:id', element: <EventDetailsPage /> },
+            ],
           },
         ],
       },
