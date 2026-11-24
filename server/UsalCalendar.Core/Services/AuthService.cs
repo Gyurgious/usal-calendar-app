@@ -9,7 +9,7 @@ public sealed class AuthService(IUserRepository users, IPasswordHasher passwordH
     public async Task<User?> ValidateCredentialsAsync(string logonName, string password, CancellationToken ct = default)
     {
         var user = await users.GetByLogonNameAsync(logonName, ct);
-        if (user is null || !passwordHasher.Verify(password, user.PasswordHash))
+        if (user is null || !user.IsActive || !passwordHasher.Verify(password, user.PasswordHash))
         {
             return null;
         }

@@ -71,6 +71,9 @@ namespace UsalCalendar.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("DeactivatedAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(25)

@@ -13,6 +13,9 @@ public class User
     public required string LoginName { get; set; }
     public required string PasswordHash { get; set; }
     public bool IsApprover { get; set; }
+    public DateTime? DeactivatedAtUtc { get; set; }
+    public bool IsActive => DeactivatedAtUtc is null;
+
 
     // expression-bodied property (only has getter)
     public string DisplayName =>

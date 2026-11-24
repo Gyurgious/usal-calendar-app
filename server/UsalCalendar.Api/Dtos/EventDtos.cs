@@ -17,7 +17,7 @@ public sealed record CalendarEventDto(
     bool IsApproved)
 {
     public static CalendarEventDto FromEntity(CalendarEvent e) => new(
-        e.Id, e.Title, e.Location, e.Description, e.Date, e.Time, e.CreatorId, e.Creator.DisplayName, e.IsApproved);
+        e.Id, e.Title, e.Location, e.Description, e.Date, e.Time, e.CreatorId, UserNames.Of(e.Creator), e.IsApproved);
 }
 
 /// <summary>One row of the Pending Approvals table (spec 5.5).</summary>
@@ -32,7 +32,7 @@ public sealed record PendingEventDto(
     DateTime CreatedAtUtc)
 {
     public static PendingEventDto FromEntity(CalendarEvent e) => new(
-        e.Id, e.Title, e.Location, e.Description, e.Date, e.Time, e.Creator.DisplayName, AsUtc(e.CreatedAtUtc));
+        e.Id, e.Title, e.Location, e.Description, e.Date, e.Time, UserNames.Of(e.Creator), AsUtc(e.CreatedAtUtc));
     internal static DateTime AsUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }
 
@@ -48,12 +48,14 @@ public sealed record ManagedEventDto(
     string CreatorName,
     DateTime CreatedAtUtc,
     string? ApproverName,
-    DateTime? ApprovedAtUtc)
+    DateTime? ApprovedAtUtc
+    )
 {
     public static ManagedEventDto FromEntity(CalendarEvent e) => new(
         e.Id, e.Title, e.Location, e.Description, e.Date, e.Time, e.IsApproved,
-        e.Creator.DisplayName, UtcDates.AsUtc(e.CreatedAtUtc),
-        e.Approver?.DisplayName, e.ApprovedAtUtc is { } approvedAt ? UtcDates.AsUtc(approvedAt) : null);
+        UserNames.Of(e.Creator), UtcDates.AsUtc(e.CreatedAtUtc),
+        e.Approver is null ? null : UserNames.Of(e.Approver), 
+        e.ApprovedAtUtc is { } approvedAt ? UtcDates.AsUtc(approvedAt) : null);
 }
 
 /// <summary>POST /api/events body. Validation rules V4 (location), V5 (title), V6 (description).</summary>
@@ -88,4 +90,10 @@ internal static class ValidationMessages
 internal static class UtcDates
 {
     public static DateTime AsUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
+}
+
+/// <summary>How creator and approver names appear on events (V7), with a marker for deleted users.</summary>
+internal static class UserNames
+{
+    public static string Of(User user) => user.IsActive ? user.DisplayName : $"{user.DisplayName} (deactivated)";
 }

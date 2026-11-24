@@ -39,6 +39,6 @@ public sealed class AuthController(AuthService authService, TokenService tokenSe
         }
 
         var user = await users.GetByIdAsync(userId, ct);
-        return user is null ? Unauthorized() : CurrentUserDto.FromUser(user);
+        return user is { IsActive: true } ? CurrentUserDto.FromUser(user) : Unauthorized();
     }
 }
