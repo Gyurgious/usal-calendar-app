@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { eventSchema } from './eventSchema'
+import { eventFormSchema, eventSchema } from './eventSchema'
 
 const valid = { title: 'Bake Sale', location: 'Cafeteria', description: 'Fundraiser', date: '2026-12-01', time: '15:30' }
 const errorFor = (overrides: Partial<typeof valid>) => {
@@ -38,4 +38,30 @@ describe('eventSchema', () => {
       expect(errorFor(overrides)).toMatch(/can only contain printable characters/)
     },
   )
+
+  describe('eventFormSchema (no past dates)', () => {
+    const today = '2026-11-20'
+    const dateError = (date: string, currentDate?: string) => {
+      const result = eventFormSchema(today, currentDate).safeParse({ ...valid, date })
+      return result.success ? null : result.error.issues[0].message
+    }
+
+    it('accepts today and later dates', () => {
+      expect(dateError('2026-11-20')).toBeNull()
+      expect(dateError('2027-01-01')).toBeNull()
+    })
+
+    it('rejects past dates', () => {
+      expect(dateError('2026-11-19')).toBe('Pick today or a later date.')
+    })
+
+    it("when editing, keeps accepting the event's own past date, but not another past date", () => {
+      expect(dateError('2026-11-01', '2026-11-01')).toBeNull()
+      expect(dateError('2026-11-02', '2026-11-01')).toBe('Pick today or a later date.')
+    })
+
+    it('an empty date still says "Date is required."', () => {
+      expect(dateError('')).toBe('Date is required.')
+    })
+  })
 })

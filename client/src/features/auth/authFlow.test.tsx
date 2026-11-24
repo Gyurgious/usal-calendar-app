@@ -30,7 +30,7 @@ describe('auth flow', () => {
     const router = renderApp('/')
     const user = userEvent.setup()
 
-    await user.type(await screen.findByLabelText('Logon name'), 'admin')
+    await user.type(await screen.findByLabelText('Login name'), 'admin')
     await user.type(screen.getByLabelText('Password'), 'Admin123!')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
@@ -50,7 +50,7 @@ describe('auth flow', () => {
     renderApp('/login')
     const user = userEvent.setup()
 
-    await user.type(screen.getByLabelText('Logon name'), 'admin')
+    await user.type(screen.getByLabelText('Login name'), 'admin')
     await user.type(screen.getByLabelText('Password'), 'wrong')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 

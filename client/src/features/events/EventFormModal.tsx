@@ -6,10 +6,11 @@ import { Icon } from '../../shared/components/Icon'
 import { LIMITS } from '../../shared/validation/patterns'
 import { useAuth } from '../auth/AuthContext'
 import type { CalendarEvent } from '../calendar/calendarApi'
-import { eventSchema, type EventFormValues } from './eventSchema'
+import { eventFormSchema, type EventFormValues } from './eventSchema'
 import type { ManagedEvent } from './eventsApi'
 import { useCreateEvent } from './useCreateEvent'
 import { useUpdateEvent } from './useEventActions'
+import { toIsoDate } from '../calendar/calendarDates'
 
 /** The fields the form edits. A calendar event or a managed event both fit. */
 export type EditableEvent = Pick<ManagedEvent, 'id' | 'title' | 'location' | 'description' | 'date' | 'time' | 'isApproved'>
@@ -28,6 +29,7 @@ export function EventFormModal({ event, defaultDate = '', onClose, onSaved }: Ev
   const createEvent = useCreateEvent()
   const updateEvent = useUpdateEvent()
   const [serverError, setServerError] = useState<string | null>(null)
+  const [today] = useState(() => toIsoDate(new Date()))
   const isApprover = user?.isApprover ?? false
 
   const {
@@ -35,7 +37,7 @@ export function EventFormModal({ event, defaultDate = '', onClose, onSaved }: Ev
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<EventFormValues>({
-    resolver: zodResolver(eventSchema),
+        resolver: zodResolver(eventFormSchema(today, event?.date)),
     defaultValues: event
       ? {
           title: event.title,
@@ -125,7 +127,12 @@ export function EventFormModal({ event, defaultDate = '', onClose, onSaved }: Ev
           <div className="form-row">
             <Form.Group className="mb-3" controlId="eventDate">
               <Form.Label>Date</Form.Label>
-              <Form.Control type="date" isInvalid={!!errors.date} {...register('date')} />
+              <Form.Control
+                type="date"
+                min={event && event.date < today ? undefined : today}
+                isInvalid={!!errors.date}
+                {...register('date')}
+              />
               <Form.Control.Feedback type="invalid">{errors.date?.message}</Form.Control.Feedback>
             </Form.Group>
 

@@ -20,6 +20,7 @@ public sealed class EventService(IEventRepository events, IUserRepository users,
     {
         var creator = await users.GetByIdAsync(creatorId, ct)
                       ?? throw new NotFoundException($"User {creatorId} was not found.");
+        EnsureNotInPast(details.Date);
         var nowUtc = clock.GetUtcNow().UtcDateTime;
 
         var calendarEvent = new CalendarEvent
@@ -59,9 +60,12 @@ public sealed class EventService(IEventRepository events, IUserRepository users,
     public async Task<CalendarEvent> UpdateAsync(int eventId, EventDetails details, CancellationToken ct = default)
     {
         var calendarEvent = await GetExistingAsync(eventId, ct);
+         if (details.Date != calendarEvent.Date)
+        {
+            EnsureNotInPast(details.Date);
+        }
         if (calendarEvent.IsApproved)
         {
-            // Exclude this event, so saving it on its own (full) day still works.
             await EnsureDayHasRoomAsync(details.Date, excludeEventId: calendarEvent.Id, ct);
         }
 
@@ -142,6 +146,16 @@ public sealed class EventService(IEventRepository events, IUserRepository users,
             throw new BusinessRuleException(
                 $"{date.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)} already has " +
                 $"{ValidationRules.MaxApprovedEventsPerDay} approved events. Please choose another day.");
+        }
+    }
+
+    private void EnsureNotInPast(DateOnly date)
+    {
+        var today = DateOnly.FromDateTime(clock.GetLocalNow().DateTime);
+        if (date < today)
+        {
+            throw new BusinessRuleException(
+                $"{date.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture)} is in the past. Please choose today or a later date.");
         }
     }
 

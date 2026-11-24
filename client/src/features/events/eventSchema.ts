@@ -25,4 +25,10 @@ export const eventSchema = z.object({
   time: z.string().min(1, 'Time is required.'), 
 })
 
+export const eventFormSchema = (today: string, currentDate?: string) =>
+  eventSchema.refine((values) => values.date === '' || values.date >= today || values.date === currentDate, {
+    path: ['date'],
+    message: 'Pick today or a later date.',
+  })
+
 export type EventFormValues = z.infer<typeof eventSchema>

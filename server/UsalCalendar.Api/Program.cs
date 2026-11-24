@@ -3,6 +3,7 @@ using UsalCalendar.Api.ErrorHandling;
 using UsalCalendar.Infrastructure;
 using UsalCalendar.Core;
 using UsalCalendar.Infrastructure.Data;
+using UsalCalendar.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,19 +13,19 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<TimeProvider>(SchoolTimeProvider.FromConfiguration(builder.Configuration));
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddCore(); 
 builder.Services.AddInfrastructure(
+    
     builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("Connection string 'Default' is missing."));
 
 var app = builder.Build(); // build pipleline (steps every HTTP request passes through)
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi().AllowAnonymous();
+    app.MapOpenApi().AllowAnonymous(); // desc of API's shape
     await app.Services.MigrateAndSeedAsync();
 }
 

@@ -110,6 +110,20 @@ describe('create event', () => {
     expect(postCalls(fetchMock)).toHaveLength(0)
   })
 
+  it('rejects a past date before sending anything, and the date picker starts at today', async () => {
+    // The tests' "today" is Nov 1, 2026 (see test/setup.ts).
+    const fetchMock = setUpApi(jsmith, () => jsonResponse(201, created(false)))
+    renderApp('/?view=month&date=2026-11-05')
+    const user = await openFormAndFill()
+
+    expect(screen.getByLabelText('Date')).toHaveAttribute('min', '2026-11-01')
+    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-10-31' } })
+    await user.click(screen.getByRole('button', { name: 'Submit for approval' }))
+
+    expect(await screen.findByText('Pick today or a later date.')).toBeInTheDocument()
+    expect(postCalls(fetchMock)).toHaveLength(0)
+  })
+
   it('Cancel closes the form without saving', async () => {
     const fetchMock = setUpApi(jsmith, () => jsonResponse(201, created(false)))
     renderApp('/?view=month&date=2026-11-05')
