@@ -74,9 +74,10 @@ cd client
 npm run build
 ```
 
-### Resetting the demo data
+### Resetting the demo data (optional)
 
-Stop the API, delete `server/UsalCalendar.Api/usalcalendar.db` (and the `-shm` and `-wal` files next to it, if
+Not needed to run the app. Do this only if you want a fresh start, for example after a demo changed or deleted
+events. Stop the API, delete `server/UsalCalendar.Api/usalcalendar.db` (and the `-shm` and `-wal` files next to it, if
 present), then start the API again. The seeded events are placed relative to the current month, so the calendar
 always has something to show.
 
@@ -168,9 +169,7 @@ Optional features (drag and drop, managing locations, event images) aren't imple
 
 The specification doesn't cover the points below. Where a product decision was needed, it's marked.
 
-- **Pending events on the calendar.** They show grayed out and italic with a "Pending" label. Normal users see only
-  their own pending events; approvers see all of them. Pending events don't count toward the 10-per-day limit, only
-  approved ones do.
+- **Pending events on the calendar.** They show grayed out and italic with a "Pending" label. Normal users see only their own pending events and able to withdraw them (Confirmed with Kathy); approvers see all of them.
 - **Withdraw and delete are one endpoint** (`DELETE /api/events/{id}`). The server decides who may do it:
   approvers can delete any event, and creators can withdraw only their own *pending* events. The UI calls it
   "Withdraw" for normal users.
