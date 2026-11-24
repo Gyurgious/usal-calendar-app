@@ -40,7 +40,7 @@ afterEach(() => {
 })
 
 describe('breadcrumbs', () => {
-  it('the calendar reads "USAL › Calendar", with Calendar as the current page', async () => {
+  it('the calendar reads "Home › Calendar", with Calendar as the current page', async () => {
     setUpApi(jsmith)
     renderApp('/')
 
@@ -49,7 +49,7 @@ describe('breadcrumbs', () => {
     expect(within(breadcrumb()).getByText('Calendar')).toHaveAttribute('aria-current', 'page')
   })
 
-    it('the calendar reads "Home › Calendar", with Calendar as the current page', async () => {
+    it('event details read "Home › Events › <title>", with Events linking back to the list', async () => {
     setUpApi(admin)
     renderApp('/events/7')
 

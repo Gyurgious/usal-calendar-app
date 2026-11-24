@@ -49,14 +49,13 @@ export function LoginPage() {
             <Icon name="calendar" size={24} />
           </span>
           <h1>USAL School Calendar</h1>
-          <p>Sign in to view and submit school events.</p>
         </div>
 
         {serverError && <Alert variant="danger">{serverError}</Alert>}
 
         <Form noValidate onSubmit={handleSubmit(onSubmit)}>
           <Form.Group className="mb-3" controlId="logonName">
-            <Form.Label>Logon name</Form.Label>
+            <Form.Label>Login name</Form.Label>
             <Form.Control
               autoComplete="username"
               autoFocus

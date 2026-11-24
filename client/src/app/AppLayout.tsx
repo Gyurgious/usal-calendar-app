@@ -44,7 +44,7 @@ export function AppLayout() {
             <Icon name="calendar" size={20} />
           </span>
           <span className="brand-text">
-            <strong>School Name</strong>
+            <strong>USAL</strong>
             <span>School calendar</span>
           </span>
         </Link>
