@@ -9,6 +9,7 @@ export interface AuthContextValue {
   status: AuthStatus
   signIn: (logonName: string, password: string) => Promise<void>
   signOut: () => void
+  refreshUser: () => Promise<void> // reloads sign-in user (e.g after user edits name)
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

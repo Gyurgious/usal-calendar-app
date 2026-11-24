@@ -25,6 +25,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('authenticated')
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    setUser(await getCurrentUser())
+  }, [])
+
   // Any API call that gets a 401 (expired or invalid token) signs the user out.
   useEffect(() => {
     setUnauthorizedHandler(signOut)
@@ -55,8 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [signOut])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, status, signIn, signOut }),
-    [user, status, signIn, signOut],
+    () => ({ user, status, signIn, signOut, refreshUser }),
+    [user, status, signIn, signOut, refreshUser],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

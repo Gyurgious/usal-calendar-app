@@ -7,6 +7,7 @@ import { CalendarPage } from '../features/calendar/CalendarPage'
 import { AppLayout } from './AppLayout'
 import { EventDetailsPage } from '../features/events/EventDetailsPage'
 import { EventsPage } from '../features/events/EventsPage'
+import { UsersPage } from '../features/users/UsersPage'
 
 // Exported separately so tests can reuse the exact same routes with an in-memory router.
 export const routes: RouteObject[] = [
@@ -25,6 +26,7 @@ export const routes: RouteObject[] = [
               { path: 'approvals', element: <ApprovalsPage /> },
               { path: 'events', element: <EventsPage /> },
               { path: 'events/:id', element: <EventDetailsPage /> },
+              { path: 'users', element: <UsersPage /> },
             ],
           },
         ],

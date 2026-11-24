@@ -27,6 +27,9 @@ export function AppLayout() {
                   <Nav.Link as={NavLink} to="/events">
                     Events
                   </Nav.Link>
+                  <Nav.Link as={NavLink} to="/users">
+                    Users
+                  </Nav.Link>
                 </>
               )}
             </Nav>
