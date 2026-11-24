@@ -256,4 +256,32 @@ public class UsersEndpointsTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.NotFound, (await admin.PutAsJsonAsync("/api/users/99999", Body("ghost1"))).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await admin.DeleteAsync(Url("/api/users/99999"))).StatusCode);
     }
+
+    [Fact]
+    public async Task DeletedUser_WithStillValidToken_Gets401OnNextRequest()
+    {
+        var admin = await AdminAsync();
+        var user = await CreateAsync(admin, "goneuser");
+        var userClient = await factory.CreateClientAsAsync("goneuser", "Pass123!");
+
+        (await admin.DeleteAsync(Url($"/api/users/{user.Id}"))).EnsureSuccessStatusCode();
+
+        var response = await userClient.GetAsync(Url("/api/events?from=2026-01-01&to=2026-01-31"));
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DemotedApprover_WithOldToken_LosesApproverAccess_ButStaysSignedIn()
+    {
+        var admin = await AdminAsync();
+        var created = await admin.PostAsJsonAsync("/api/users", Body("demoteme", ("isApprover", true)));
+        var user = (await created.Content.ReadFromJsonAsync<UserDto>())!;
+        var userClient = await factory.CreateClientAsAsync("demoteme", "Pass123!"); // token says Approver
+
+        var demote = await admin.PutAsJsonAsync($"/api/users/{user.Id}", Body("demoteme", ("password", "")));
+        demote.EnsureSuccessStatusCode();
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await userClient.GetAsync(Url("/api/events/pending"))).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await userClient.GetAsync(Url("/api/events?from=2026-01-01&to=2026-01-31"))).StatusCode);
+    }
 }
