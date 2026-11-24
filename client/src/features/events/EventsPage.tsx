@@ -5,7 +5,7 @@ import { Link, useLocation, useSearchParams } from 'react-router'
 import { formatLongDate, formatTime, toIsoDate } from '../calendar/calendarDates'
 import { EventFormModal } from './EventFormModal'
 import { EventStatusBadge } from './EventStatusBadge'
-import type { EventStatusFilter } from './eventsApi'
+import type { EventStatusFilter, ManagedEvent } from './eventsApi'
 import { useEvents } from './useEventActions'
 import './events.css'
 
@@ -13,12 +13,18 @@ import './events.css'
 const parseStatus = (value: string | null): EventStatusFilter =>
   value === 'approved' || value === 'pending' ? value : 'all'
 
-/**All events for approvers, filterable by status. The filter lives in the URL (?status=pending), */
+const matchesSearch = (event: ManagedEvent, term: string) =>
+  [event.title].some((text) => text?.toLowerCase().includes(term))
+
 export function EventsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
   const status = parseStatus(searchParams.get('status'))
   const { data: events = [], isPending, isError, error } = useEvents(status)
+
+  const [search, setSearch] = useState('')
+  const term = search.trim().toLowerCase()
+  const shownEvents = term ? events.filter((event) => matchesSearch(event, term)) : events
 
   // The details page sends a message here after deleting an event.
   const [message, setMessage] = useState<string | null>(
@@ -57,26 +63,48 @@ export function EventsPage() {
       <section className="panel" aria-label="Events">
         <div className="table-search">
           <span className="count">
-            {isPending ? 'Loading…' : `${events.length} ${events.length === 1 ? 'event' : 'events'}`}
+            {isPending ? 'Loading…' : `${shownEvents.length} ${shownEvents.length === 1 ? 'event' : 'events'}`}
           </span>
-          <Form.Select aria-label="Filter by status" value={status} onChange={(e) => changeStatus(e.target.value)}>
-            <option value="all">All statuses</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-          </Form.Select>
+          <div className="filters">
+            <Form.Control
+              type="search"
+              className="search-input"
+              placeholder="Search event"
+              aria-label="Search events"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <Form.Select aria-label="Filter by status" value={status} onChange={(e) => changeStatus(e.target.value)}>
+              <option value="all">All statuses</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+            </Form.Select>
+          </div>
         </div>
 
         {isPending ? (
           <div className="loading">
             <Spinner animation="border" role="status" aria-label="Loading events" />
           </div>
-        ) : events.length === 0 ? (
+        ) : shownEvents.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
               <Icon name="list" size={24} />
             </div>
-            <h3>No events</h3>
-            <p>No events match this filter.</p>
+            {term ? (
+              <>
+                <h3>No results</h3>
+                <p>No events match “{search.trim()}”.</p>
+                <Button variant="outline-secondary" size="sm" onClick={() => setSearch('')}>
+                  Clear search
+                </Button>
+              </>
+            ) : (
+              <>
+                <h3>No events</h3>
+                <p>No events match this filter.</p>
+              </>
+            )}
           </div>
         ) : (
           <div className="table-scroll">
@@ -91,7 +119,7 @@ export function EventsPage() {
                 </tr>
               </thead>
               <tbody>
-                {events.map((event) => (
+                {shownEvents.map((event) => (
                   <tr key={event.id}>
                     <td>
                       <Link to={`/events/${event.id}`}>{event.title}</Link>
