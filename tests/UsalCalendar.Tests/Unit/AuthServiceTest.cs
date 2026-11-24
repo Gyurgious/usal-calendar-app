@@ -33,4 +33,16 @@ public class AuthServiceTests
 
         Assert.Null(user);
     }
+
+    [Fact]
+    public async Task ValidateCredentials_ForDeletedUser_ReturnsNull()
+    {
+        var deleted = TestUsers.Create(id: 2, logonName: "gone", password: "Pass123!");
+        deleted.DeactivatedAtUtc = DateTime.UtcNow;
+        var service = new AuthService(new FakeUserRepository(deleted), new FakePasswordHasher());
+
+        var user = await service.ValidateCredentialsAsync("gone", "Pass123!"); // correct password
+
+        Assert.Null(user);
+    }
 }
