@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { Alert, Badge, Button, Spinner, Table } from 'react-bootstrap'
+import { Alert, Button, Spinner } from 'react-bootstrap'
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog'
+import { Icon } from '../../shared/components/Icon'
+import { initialsOf } from '../../shared/utils/initials'
 import { useAuth } from '../auth/AuthContext'
 import { UserFormModal } from './UserFormModal'
 import type { User } from './usersApi'
 import { useDeleteUser, useUsers } from './useUsers'
+import './users.css'
 
 type Message = { variant: 'success' | 'danger'; text: string }
 
@@ -44,15 +47,20 @@ export function UsersPage() {
 
   return (
     <>
-      <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-        <h1 className="h3 mb-0">Users</h1>
+      <div className="page-heading">
+        <div>
+          <h1>Users</h1>
+          <p>Manage who can sign in to the calendar and who can approve events.</p>
+        </div>
         <Button
+          variant="outline-secondary"
           onClick={() => {
             setMessage(null)
             setForm({ mode: 'create' })
           }}
         >
-          + New user
+          <Icon name="plus" size={17} />
+          New user
         </Button>
       </div>
 
@@ -63,63 +71,76 @@ export function UsersPage() {
       )}
       {isError && <Alert variant="danger">Could not load users: {error.message}</Alert>}
 
-      {isPending ? (
-        <div className="text-center py-5">
-          <Spinner animation="border" role="status" aria-label="Loading users" />
-        </div>
-      ) : (
-        <Table responsive striped hover className="align-middle">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Login name</th>
-              <th>Role</th>
-              <th>
-                <span className="visually-hidden">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => {
-              const isSelf = user.id === currentUser?.id
-              const canDelete = !isSelf && !user.isApprover
-              return (
-                <tr key={user.id}>
-                  <td>
-                    {user.displayName} {isSelf && <span className="text-body-secondary small">(you)</span>}
-                  </td>
-                  <td>{user.loginName}</td>
-                  <td>{user.isApprover ? <Badge bg="info" text="dark">Approver</Badge> : 'User'}</td>
-                  <td className="text-nowrap text-end">
-                    <Button
-                      size="sm"
-                      variant="outline-primary"
-                      className="me-2"
-                      onClick={() => {
-                        setMessage(null)
-                        setForm({ mode: 'edit', user })
-                      }}
-                      aria-label={`Edit ${user.displayName}`}
-                    >
-                      Edit
-                    </Button>
-                    {canDelete && (
-                      <Button
-                        size="sm"
-                        variant="outline-danger"
-                        onClick={() => setUserToDelete(user)}
-                        aria-label={`Delete ${user.displayName}`}
-                      >
-                        Delete
-                      </Button>
-                    )}
-                  </td>
+      <section className="panel" aria-label="Users">
+        {isPending ? (
+          <div className="loading">
+            <Spinner animation="border" role="status" aria-label="Loading users" />
+          </div>
+        ) : (
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Login name</th>
+                  <th scope="col">Role</th>
+                  <th scope="col">
+                    <span className="visually-hidden">Actions</span>
+                  </th>
                 </tr>
-              )
-            })}
-          </tbody>
-        </Table>
-      )}
+              </thead>
+              <tbody>
+                {users.map((user) => {
+                  const isSelf = user.id === currentUser?.id
+                  const canDelete = !isSelf && !user.isApprover
+                  return (
+                    <tr key={user.id}>
+                      <td>
+                        <div className="person-cell">
+                          <span className="avatar" aria-hidden="true">
+                            {initialsOf(user.displayName)}
+                          </span>
+                          <strong>{user.displayName}</strong>
+                          {isSelf && <span className="you">(you)</span>}
+                        </div>
+                      </td>
+                      <td>{user.loginName}</td>
+                      <td>
+                        <span className={`status${user.isApprover ? ' admin' : ''}`}>
+                          {user.isApprover ? 'Approver' : 'User'}
+                        </span>
+                      </td>
+                      <td className="actions">
+                        <Button
+                          size="sm"
+                          variant="outline-secondary"
+                          onClick={() => {
+                            setMessage(null)
+                            setForm({ mode: 'edit', user })
+                          }}
+                          aria-label={`Edit ${user.displayName}`}
+                        >
+                          Edit
+                        </Button>
+                        {canDelete && (
+                          <Button
+                            size="sm"
+                            variant="soft-danger"
+                            onClick={() => setUserToDelete(user)}
+                            aria-label={`Delete ${user.displayName}`}
+                          >
+                            Delete
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {form.mode !== 'closed' && (
         <UserFormModal

@@ -1,0 +1,20 @@
+/* Users table: name with avatar. */
+
+.person-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.person-cell .avatar {
+  width: 29px;
+  height: 29px;
+  background: #e6eee9;
+  color: var(--forest);
+  font-size: 9.5px;
+}
+
+.you {
+  color: var(--subtle);
+  font-size: 11px;
+}

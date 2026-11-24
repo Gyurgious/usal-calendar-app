@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { Alert, Form, Spinner, Table } from 'react-bootstrap'
+import { Alert, Button, Form, Spinner } from 'react-bootstrap'
+import { Icon } from '../../shared/components/Icon'
 import { Link, useLocation, useSearchParams } from 'react-router'
-import { formatLongDate, formatTime } from '../calendar/calendarDates'
+import { formatLongDate, formatTime, toIsoDate } from '../calendar/calendarDates'
+import { EventFormModal } from './EventFormModal'
 import { EventStatusBadge } from './EventStatusBadge'
 import type { EventStatusFilter } from './eventsApi'
 import { useEvents } from './useEventActions'
+import './events.css'
 
 /** Anything other than "approved" or "pending" in the URL means "all". */
 const parseStatus = (value: string | null): EventStatusFilter =>
@@ -21,23 +24,27 @@ export function EventsPage() {
   const [message, setMessage] = useState<string | null>(
     () => (location.state as { message?: string } | null)?.message ?? null,
   )
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [today] = useState(() => new Date()) // read the clock once, not on every render
 
   const changeStatus = (next: string) => setSearchParams(next === 'all' ? {} : { status: next })
 
   return (
     <>
-      <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-        <h1 className="h3 mb-0">Events</h1>
-        <Form.Select
-          aria-label="Filter by status"
-          value={status}
-          onChange={(e) => changeStatus(e.target.value)}
-          style={{ width: 'auto' }}
+      <div className="page-heading">
+        <div>
+          <h1>Events</h1>
+          <p>Every event on the school calendar, approved and pending.</p>
+        </div>
+        <Button
+          onClick={() => {
+            setMessage(null)
+            setIsFormOpen(true)
+          }}
         >
-          <option value="all">All events</option>
-          <option value="approved">Approved</option>
-          <option value="pending">Pending</option>
-        </Form.Select>
+          <Icon name="plus" size={17} />
+          New event
+        </Button>
       </div>
 
       {message && (
@@ -47,46 +54,75 @@ export function EventsPage() {
       )}
       {isError && <Alert variant="danger">Could not load events: {error.message}</Alert>}
 
-      {isPending ? (
-        <div className="text-center py-5">
-          <Spinner animation="border" role="status" aria-label="Loading events" />
+      <section className="panel" aria-label="Events">
+        <div className="table-search">
+          <span className="count">
+            {isPending ? 'Loading…' : `${events.length} ${events.length === 1 ? 'event' : 'events'}`}
+          </span>
+          <Form.Select aria-label="Filter by status" value={status} onChange={(e) => changeStatus(e.target.value)}>
+            <option value="all">All statuses</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+          </Form.Select>
         </div>
-      ) : events.length === 0 ? (
-        <p className="text-body-secondary">No events match this filter.</p>
-      ) : (
-        <>
-          <p className="text-body-secondary small mb-2">
-            {events.length} {events.length === 1 ? 'event' : 'events'}
-          </p>
-          <Table responsive striped hover className="align-middle">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Title</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Created by</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event) => (
-                <tr key={event.id}>
-                  <td className="text-nowrap">{formatLongDate(event.date)}</td>
-                  <td className="text-nowrap">{formatTime(event.time)}</td>
-                  <td>
-                    <Link to={`/events/${event.id}`}>{event.title}</Link>
-                  </td>
-                  <td>{event.location}</td>
-                  <td>
-                    <EventStatusBadge isApproved={event.isApproved} />
-                  </td>
-                  <td>{event.creatorName}</td>
+
+        {isPending ? (
+          <div className="loading">
+            <Spinner animation="border" role="status" aria-label="Loading events" />
+          </div>
+        ) : events.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <Icon name="list" size={24} />
+            </div>
+            <h3>No events</h3>
+            <p>No events match this filter.</p>
+          </div>
+        ) : (
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Event</th>
+                  <th scope="col">Date &amp; time</th>
+                  <th scope="col">Location</th>
+                  <th scope="col">Created by</th>
+                  <th scope="col">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
-        </>
+              </thead>
+              <tbody>
+                {events.map((event) => (
+                  <tr key={event.id}>
+                    <td>
+                      <Link to={`/events/${event.id}`}>{event.title}</Link>
+                    </td>
+                    <td>
+                      <span>{formatLongDate(event.date)}</span> · <span>{formatTime(event.time)}</span>
+                    </td>
+                    <td>{event.location}</td>
+                    <td>{event.creatorName}</td>
+                    <td>
+                      <EventStatusBadge isApproved={event.isApproved} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Rendered only while open, so every open starts with a fresh, empty form. The list refreshes by itself:
+          saving an event reloads all event data. */}
+      {isFormOpen && (
+        <EventFormModal
+          defaultDate={toIsoDate(today)}
+          onClose={() => setIsFormOpen(false)}
+          onSaved={(saved) => {
+            setIsFormOpen(false)
+            setMessage(`"${saved.title}" was added.`)
+          }}
+        />
       )}
     </>
   )

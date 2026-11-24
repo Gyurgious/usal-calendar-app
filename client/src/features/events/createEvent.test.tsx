@@ -40,7 +40,7 @@ const calendarReads = (fetchMock: ReturnType<typeof mockFetch>) =>
 
 async function openFormAndFill() {
   const user = userEvent.setup()
-  await user.click(await screen.findByRole('button', { name: '+ New event' }))
+  await user.click(await screen.findByRole('button', { name: 'New event' }))
   await user.type(screen.getByLabelText('Title'), 'Robotics Demo')
   await user.type(screen.getByLabelText(/Location/), 'Room 101')
   fireEvent.change(screen.getByLabelText('Time'), { target: { value: '15:30' } })
@@ -102,7 +102,7 @@ describe('create event', () => {
     renderApp('/?view=month&date=2026-11-05')
     const user = userEvent.setup()
 
-    await user.click(await screen.findByRole('button', { name: '+ New event' }))
+    await user.click(await screen.findByRole('button', { name: 'New event' }))
     await user.click(screen.getByRole('button', { name: 'Submit for approval' }))
 
     expect(await screen.findByText('Title is required.')).toBeInTheDocument()
@@ -119,5 +119,26 @@ describe('create event', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(postCalls(fetchMock)).toHaveLength(0)
+  })
+
+  it('New event on the Events page saves and stays on the list', async () => {
+    const fetchMock = setUpApi(admin, () => jsonResponse(201, created(true)))
+    const router = renderApp('/events')
+    const user = await openFormAndFill()
+    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-11-05' } })
+
+    await user.click(screen.getByRole('button', { name: 'Add event' }))
+
+    expect(await screen.findByText('"Robotics Demo" was added.')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/events')
+    expect(postCalls(fetchMock)).toHaveLength(1)
+  })
+
+  it('pages that do not create events (e.g. Users) have no New event button', async () => {
+    setUpApi(admin, () => jsonResponse(201, created(true)))
+    renderApp('/users')
+
+    expect(await screen.findByRole('heading', { name: 'Users' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'New event' })).not.toBeInTheDocument()
   })
 })

@@ -1,0 +1,349 @@
+/* App shell: sidebar, top bar and page wrapper (AppLayout). */
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+}
+
+.sidebar {
+  width: 236px;
+  height: 100vh;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  padding: 25px 16px 18px;
+  background: #fff;
+  border-right: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 9px 29px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--ink);
+}
+
+.brand-text strong,
+.brand-text span {
+  display: block;
+}
+
+.brand-text strong {
+  font: 700 15px var(--heading-font);
+  letter-spacing: -0.2px;
+}
+
+.brand-text span {
+  margin-top: 2px;
+  color: var(--subtle);
+  font-size: 11.5px;
+}
+
+.nav-label {
+  margin: 0 0 8px;
+  padding: 0 12px;
+  color: var(--subtle);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.side-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.side-link {
+  width: 100%;
+  height: 43px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border-radius: 9px;
+  color: #5e6861;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.side-link:hover {
+  background: #f3f6f4;
+  color: var(--ink);
+}
+
+.side-link.active {
+  background: var(--forest-soft);
+  color: var(--forest-dark);
+  font-weight: 700;
+}
+
+.side-link b {
+  min-width: 20px;
+  height: 20px;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #d9eae0;
+  color: var(--forest-dark);
+  font-size: 10px;
+}
+
+.profile {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 5px 0;
+  border-top: 1px solid var(--line);
+}
+
+.profile-text {
+  min-width: 0;
+}
+
+.profile-text strong,
+.profile-text span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-text strong {
+  font-size: 12px;
+}
+
+.profile-text span {
+  margin-top: 2px;
+  color: var(--subtle);
+  font-size: 10.5px;
+}
+
+.sign-out {
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: #6b756e;
+}
+
+.sign-out:hover {
+  background: #f3f6f4;
+  color: var(--ink);
+}
+
+.app-main {
+  width: calc(100% - 236px);
+  min-height: 100vh;
+  margin-left: 236px;
+}
+
+/* Breadcrumbs on the left, today's date on the right. */
+.topbar {
+  min-height: 64px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 32px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Bootstrap's breadcrumb, retuned to the design: muted links, a chevron between, the current page in ink. */
+.breadcrumbs .breadcrumb {
+  --bs-breadcrumb-margin-bottom: 0;
+  --bs-breadcrumb-font-size: 12.5px;
+  --bs-breadcrumb-item-padding-x: 12px;
+  --bs-breadcrumb-divider-color: #8a938d;
+  --bs-breadcrumb-item-active-color: var(--ink);
+  --bs-breadcrumb-divider: '›';
+}
+
+.breadcrumbs .breadcrumb-item a {
+  color: var(--subtle);
+  text-decoration: none;
+}
+
+.breadcrumbs .breadcrumb-item a:hover {
+  color: var(--forest);
+  text-decoration: underline;
+}
+
+.breadcrumbs .breadcrumb-item.active {
+  font-weight: 600;
+}
+
+.topbar-date {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.page {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 29px 32px 40px;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 74px;
+    padding-inline: 10px;
+  }
+
+  .brand {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .brand-text,
+  .nav-label,
+  .side-link span,
+  .side-link b,
+  .profile-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .side-link {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .side-link.has-badge::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    margin: -16px 0 0 -10px;
+    border-radius: 50%;
+    background: var(--forest);
+  }
+
+  .profile {
+    flex-direction: column;
+    padding-inline: 0;
+  }
+
+  .sign-out {
+    margin-left: 0;
+  }
+
+  .app-main {
+    width: calc(100% - 74px);
+    margin-left: 74px;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  /* The sidebar becomes a top bar: brand and sign-out on one row, the links in a scrolling row below. */
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: sticky;
+    top: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px 8px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .brand {
+    padding: 0;
+  }
+
+  .brand .brand-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
+  .profile {
+    order: 2;
+    margin: 0 0 0 auto;
+    flex-direction: row;
+    padding: 0;
+    border-top: 0;
+  }
+
+  .profile .avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .side-links {
+    order: 3;
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .side-link {
+    width: auto;
+    height: 38px;
+    flex: none;
+    padding: 0 12px;
+    font-size: 12.5px;
+  }
+
+  .side-link span,
+  .side-link b {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .side-link.has-badge::after {
+    display: none;
+  }
+
+  .app-main {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* No room for a second bar under the sidebar-turned-top-bar; pages keep their own back links instead. */
+  .topbar {
+    display: none;
+  }
+
+  .page {
+    padding: 22px 14px 30px;
+  }
+}

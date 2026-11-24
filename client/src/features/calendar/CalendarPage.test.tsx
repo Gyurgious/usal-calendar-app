@@ -62,9 +62,9 @@ describe('CalendarPage', () => {
     renderApp('/?view=month&date=2026-11-05')
 
     const pending = (await screen.findByText('Bake Sale')).closest('li')!
-    expect(pending).toHaveClass('fst-italic', 'text-body-secondary')
+    expect(pending).toHaveClass('event-pill', 'is-pending')
     expect(pending).toHaveAttribute('title', 'Pending approval')
-    expect(screen.getByText('Picture Day').closest('li')).not.toHaveClass('fst-italic')
+    expect(screen.getByText('Picture Day').closest('li')).not.toHaveClass('is-pending')
   })
 
   it('clicking a day opens the day view with description, creator and a Pending badge', async () => {
@@ -76,7 +76,7 @@ describe('CalendarPage', () => {
     expect(await screen.findByRole('heading', { name: 'Thursday, November 5, 2026' })).toBeInTheDocument()
     expect(screen.getByText('Wear school colors!')).toBeInTheDocument()
     expect(screen.getAllByText('Created by Jones, Maria')).toHaveLength(2)
-    const bakeSale = screen.getByText('Bake Sale').closest('.list-group-item') as HTMLElement
+    const bakeSale = screen.getByText('Bake Sale').closest('li') as HTMLElement
     expect(within(bakeSale).getByText('Pending')).toBeInTheDocument()
     expect(router.state.location.search).toBe('?view=day&date=2026-11-05')
     expect(eventRequests()).toContain('/api/events?from=2026-11-05&to=2026-11-05')
@@ -86,7 +86,7 @@ describe('CalendarPage', () => {
     renderApp('/?view=day&date=2026-11-05')
 
     await screen.findByText('Picture Day')
-    const titles = screen.getAllByRole('listitem').map((item) => item.textContent)
+    const titles = within(screen.getByRole('region', { name: 'Calendar' })).getAllByRole('listitem').map((item) => item.textContent)
     expect(titles[0]).toContain('Picture Day')
     expect(titles[1]).toContain('Faculty Lunch')
     expect(titles[2]).toContain('Bake Sale')

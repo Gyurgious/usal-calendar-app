@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { Alert, Button, Form, Modal } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
+import { Icon } from '../../shared/components/Icon'
 import { LIMITS } from '../../shared/validation/patterns'
 import { useAuth } from '../auth/AuthContext'
 import type { CalendarEvent } from '../calendar/calendarApi'
@@ -10,9 +11,12 @@ import type { ManagedEvent } from './eventsApi'
 import { useCreateEvent } from './useCreateEvent'
 import { useUpdateEvent } from './useEventActions'
 
+/** The fields the form edits. A calendar event or a managed event both fit. */
+export type EditableEvent = Pick<ManagedEvent, 'id' | 'title' | 'location' | 'description' | 'date' | 'time' | 'isApproved'>
+
 interface EventFormModalProps {
   /** Give an event to edit it. Leave it out to create a new one. */
-  event?: ManagedEvent
+  event?: EditableEvent
   defaultDate?: string
   onClose: () => void
   onSaved: (event: CalendarEvent | ManagedEvent) => void
@@ -61,12 +65,15 @@ export function EventFormModal({ event, defaultDate = '', onClose, onSaved }: Ev
     }
   }
 
+  let noteTitle: string
   let helpText: string
   if (event) {
+    noteTitle = event.isApproved ? 'Approved event' : 'Still pending'
     helpText = event.isApproved
       ? 'This event is approved. It can only move to a day with fewer than 10 approved events.'
       : 'This event is still pending. Saving your changes does not approve it.'
   } else {
+    noteTitle = isApprover ? 'Added right away' : 'Approval required'
     helpText = isApprover
       ? 'As an approver, your event is added to the calendar immediately.'
       : 'Your event will be submitted for approval. Until then it appears grayed out on your calendar.'
@@ -78,50 +85,73 @@ export function EventFormModal({ event, defaultDate = '', onClose, onSaved }: Ev
     <Modal show onHide={onClose} centered>
       <Form noValidate onSubmit={handleSubmit(onSubmit)}>
         <Modal.Header closeButton>
-          <Modal.Title>{event ? 'Edit event' : 'New event'}</Modal.Title>
+          <div>
+            <Modal.Title>{event ? 'Edit event' : 'New event'}</Modal.Title>
+            <p className="modal-subtitle">
+              {event ? 'Update the details of this event.' : 'Fill in the details of your event.'}
+            </p>
+          </div>
         </Modal.Header>
 
         <Modal.Body>
-          <p className="text-body-secondary small">{helpText}</p>
-
           {serverError && <Alert variant="danger">{serverError}</Alert>}
 
           <Form.Group className="mb-3" controlId="eventTitle">
             <Form.Label>Title</Form.Label>
-            <Form.Control autoFocus isInvalid={!!errors.title} {...register('title')} />
+            <Form.Control
+              autoFocus
+              placeholder="e.g. Spring field trip"
+              isInvalid={!!errors.title}
+              {...register('title')}
+            />
             <Form.Control.Feedback type="invalid">{errors.title?.message}</Form.Control.Feedback>
           </Form.Group>
 
-          <div className="row">
-            <Form.Group className="mb-3 col" controlId="eventDate">
+          <Form.Group className="mb-3" controlId="eventDescription">
+            <Form.Label>
+              Description <span className="optional">(optional)</span>
+            </Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              placeholder="Add any helpful details about this event…"
+              isInvalid={!!errors.description}
+              {...register('description')}
+            />
+            <Form.Text muted>Up to {LIMITS.description} characters.</Form.Text>
+            <Form.Control.Feedback type="invalid">{errors.description?.message}</Form.Control.Feedback>
+          </Form.Group>
+
+          <div className="form-row">
+            <Form.Group className="mb-3" controlId="eventDate">
               <Form.Label>Date</Form.Label>
               <Form.Control type="date" isInvalid={!!errors.date} {...register('date')} />
               <Form.Control.Feedback type="invalid">{errors.date?.message}</Form.Control.Feedback>
             </Form.Group>
 
-            <Form.Group className="mb-3 col" controlId="eventTime">
+            <Form.Group className="mb-3" controlId="eventTime">
               <Form.Label>Time</Form.Label>
               <Form.Control type="time" isInvalid={!!errors.time} {...register('time')} />
               <Form.Control.Feedback type="invalid">{errors.time?.message}</Form.Control.Feedback>
             </Form.Group>
           </div>
 
-          <Form.Group className="mb-3" controlId="eventLocation">
+          <Form.Group controlId="eventLocation">
             <Form.Label>
-              Location <span className="text-body-secondary">(optional)</span>
+              Location <span className="optional">(optional)</span>
             </Form.Label>
-            <Form.Control isInvalid={!!errors.location} {...register('location')} />
+            <Form.Control placeholder="e.g. Main auditorium" isInvalid={!!errors.location} {...register('location')} />
             <Form.Control.Feedback type="invalid">{errors.location?.message}</Form.Control.Feedback>
           </Form.Group>
 
-          <Form.Group controlId="eventDescription">
-            <Form.Label>
-              Description <span className="text-body-secondary">(optional)</span>
-            </Form.Label>
-            <Form.Control as="textarea" rows={3} isInvalid={!!errors.description} {...register('description')} />
-            <Form.Text muted>Up to {LIMITS.description} characters.</Form.Text>
-            <Form.Control.Feedback type="invalid">{errors.description?.message}</Form.Control.Feedback>
-          </Form.Group>
+          <div className="submit-note">
+            <Icon name="clock" size={17} />
+            <p>
+              <strong>{noteTitle}</strong>
+              <br />
+              {helpText}
+            </p>
+          </div>
         </Modal.Body>
 
         <Modal.Footer>

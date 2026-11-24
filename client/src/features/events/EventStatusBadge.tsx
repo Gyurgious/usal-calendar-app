@@ -1,6 +1,4 @@
-import { Badge } from 'react-bootstrap'
-
-/** Green "Approved" or gray "Pending" label. */
+/** Green "Approved" or amber "Pending" chip. */
 export function EventStatusBadge({ isApproved }: { isApproved: boolean }) {
-  return isApproved ? <Badge bg="success">Approved</Badge> : <Badge bg="secondary">Pending</Badge>
+  return isApproved ? <span className="status live">Approved</span> : <span className="status pending">Pending</span>
 }

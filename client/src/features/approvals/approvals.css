@@ -1,0 +1,208 @@
+/* Pending approvals: the list of submitted events. */
+
+.count-chip {
+  padding: 7px 11px;
+  border-radius: 15px;
+  background: #f8ead6;
+  color: #85591d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.panel-title {
+  padding: 19px 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-title h2 {
+  margin: 0;
+  font: 700 15px var(--heading-font);
+}
+
+.panel-title p {
+  margin: 4px 0 0;
+  color: var(--subtle);
+  font-size: 11px;
+}
+
+/*
+ * Each pending event is one row: event | when | submitted by | actions. The columns line up across rows
+ * so dates and submitters can be compared at a glance. When the panel is narrower than the columns need
+ * (tablet, phone), each row becomes a card with labelled details. A container query is used instead of a
+ * media query because the available width depends on the sidebar, not only on the screen.
+ */
+.approvals-panel {
+  container-type: inline-size;
+  --approval-columns: minmax(240px, 2.2fr) minmax(160px, 1.2fr)
+    minmax(160px, 1.2fr) 196px;
+}
+
+.approval-columns {
+  display: grid;
+  grid-template-columns: var(--approval-columns);
+  column-gap: 24px;
+  height: 37px;
+  align-items: center;
+  padding: 0 22px;
+  background: #fafbfa;
+  border-bottom: 1px solid var(--line);
+  color: #6f7a72;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.approval-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.approval-list > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.approval-item {
+  display: grid;
+  grid-template-columns: var(--approval-columns);
+  column-gap: 24px;
+  align-items: center;
+  padding: 16px 22px;
+  transition: background-color 0.15s ease;
+}
+
+/* Ties the row to its buttons while pointing at it or tabbing through it. */
+.approval-item:hover,
+.approval-item:focus-within {
+  background: #f6faf7;
+}
+
+.request-event {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.request-icon {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #eef4f0;
+  color: var(--forest);
+}
+
+.request-event h3 {
+  margin: 0;
+  font: 700 13.5px var(--heading-font);
+}
+
+.request-description {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.request-description.is-empty {
+  color: var(--subtle);
+  font-style: italic;
+}
+
+/* The two detail columns share the row's grid, so they line up with the column labels. */
+.request-details {
+  grid-column: 2 / 4;
+  margin: 0;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+/* On wide screens the column labels name these fields; the <dt> stays for screen readers. */
+.request-details dt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.request-details dd {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.request-details .primary-line,
+.request-details .secondary-line {
+  display: block;
+}
+
+.request-details .primary-line {
+  color: #344139;
+  font-weight: 600;
+}
+
+.request-details .secondary-line {
+  color: #5f6a63;
+  font-size: 12px;
+}
+
+.approval-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+  .approval-actions .btn {
+    flex: 1;
+    min-height: 40px;
+  }
+
+@container (max-width: 820px) {
+  .approval-columns {
+    display: none;
+  }
+
+  .approval-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px 17px;
+  }
+
+  .request-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .request-details > div {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 10px;
+  }
+
+  .request-details dt {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    padding-top: 2px;
+    color: #6f7a72;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .approval-actions .btn {
+    min-height: 40px;
+  }
+}

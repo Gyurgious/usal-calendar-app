@@ -1,10 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { Alert, Button, Card, Container, Form } from 'react-bootstrap'
+import { Alert, Button, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { Navigate, useLocation, useNavigate, type Location } from 'react-router'
+import { Icon } from '../../shared/components/Icon'
 import { useAuth } from './AuthContext'
 import { loginSchema, type LoginFormValues } from './loginSchema'
+import './login.css'
 
 export function LoginPage() {
   const { status, signIn } = useAuth()
@@ -40,42 +42,46 @@ export function LoginPage() {
   }
 
   return (
-    <Container className="d-flex justify-content-center align-items-center min-vh-100">
-      <Card className="shadow-sm w-100" style={{ maxWidth: 400 }}>
-        <Card.Body className="p-4">
-          <h1 className="h4 mb-4 text-center">USAL School Calendar</h1>
+    <main className="login-page">
+      <div className="login-card">
+        <div className="login-brand">
+          <span className="brand-mark">
+            <Icon name="calendar" size={24} />
+          </span>
+          <h1>USAL School Calendar</h1>
+          <p>Sign in to view and submit school events.</p>
+        </div>
 
-          {serverError && <Alert variant="danger">{serverError}</Alert>}
+        {serverError && <Alert variant="danger">{serverError}</Alert>}
 
-          <Form noValidate onSubmit={handleSubmit(onSubmit)}>
-            <Form.Group className="mb-3" controlId="logonName">
-              <Form.Label>Logon name</Form.Label>
-              <Form.Control
-                autoComplete="username"
-                autoFocus
-                isInvalid={!!errors.logonName}
-                {...register('logonName')}
-              />
-              <Form.Control.Feedback type="invalid">{errors.logonName?.message}</Form.Control.Feedback>
-            </Form.Group>
+        <Form noValidate onSubmit={handleSubmit(onSubmit)}>
+          <Form.Group className="mb-3" controlId="logonName">
+            <Form.Label>Logon name</Form.Label>
+            <Form.Control
+              autoComplete="username"
+              autoFocus
+              isInvalid={!!errors.logonName}
+              {...register('logonName')}
+            />
+            <Form.Control.Feedback type="invalid">{errors.logonName?.message}</Form.Control.Feedback>
+          </Form.Group>
 
-            <Form.Group className="mb-4" controlId="password">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                autoComplete="current-password"
-                isInvalid={!!errors.password}
-                {...register('password')}
-              />
-              <Form.Control.Feedback type="invalid">{errors.password?.message}</Form.Control.Feedback>
-            </Form.Group>
+          <Form.Group className="mb-4" controlId="password">
+            <Form.Label>Password</Form.Label>
+            <Form.Control
+              type="password"
+              autoComplete="current-password"
+              isInvalid={!!errors.password}
+              {...register('password')}
+            />
+            <Form.Control.Feedback type="invalid">{errors.password?.message}</Form.Control.Feedback>
+          </Form.Group>
 
-            <Button type="submit" className="w-100" disabled={isSubmitting}>
-              {isSubmitting ? 'Signing in…' : 'Sign in'}
-            </Button>
-          </Form>
-        </Card.Body>
-      </Card>
-    </Container>
+          <Button type="submit" className="w-100" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
+          </Button>
+        </Form>
+      </div>
+    </main>
   )
 }

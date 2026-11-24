@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Alert, Spinner } from 'react-bootstrap'
+import { Alert, Button, Spinner } from 'react-bootstrap'
 import { useSearchParams } from 'react-router'
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog'
+import { Icon } from '../../shared/components/Icon'
 import { useAuth } from '../auth/AuthContext'
 import { EventFormModal } from '../events/EventFormModal'
+import type { ManagedEvent } from '../events/eventsApi'
 import { useDeleteEvent } from '../events/useEventActions'
 import type { CalendarEvent } from './calendarApi'
 import { CalendarToolbar } from './CalendarToolbar'
@@ -11,22 +13,22 @@ import { getVisibleRange, parseIsoDate, shiftDate, toIsoDate, type CalendarView 
 import { DayView } from './DayView'
 import { MonthView } from './MonthView'
 import { useCalendarEvents } from './useCalendarEvents'
-import type { ManagedEvent } from '../events/eventsApi'
+import './calendar.css'
 
 type Message = { variant: 'success' | 'danger'; text: string }
 
-/**
- * Month and Day views. The view and the selected date live in the URL (?view=day&date=2026-11-05),
- * so refresh, Back/Forward and bookmarks all keep your place.
- */
+/** Removing an event: creators withdraw their own pending submission, approvers delete any event. */
+type Removal = { event: CalendarEvent; kind: 'withdraw' | 'delete' }
+
 export function CalendarPage() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [today] = useState(() => new Date()) // read the clock once, not on every render
-  const [isFormOpen, setIsFormOpen] = useState(false)
-  const [eventToWithdraw, setEventToWithdraw] = useState<CalendarEvent | null>(null)
   const [message, setMessage] = useState<Message | null>(null)
-  const withdraw = useDeleteEvent()
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [removal, setRemoval] = useState<Removal | null>(null)
+  const [eventToEdit, setEventToEdit] = useState<CalendarEvent | null>(null)
+  const remove = useDeleteEvent() // the same DELETE for withdraw and delete; the server checks who may do it
   const view: CalendarView = searchParams.get('view') === 'day' ? 'day' : 'month'
   const date = parseIsoDate(searchParams.get('date')) ?? today
 
@@ -47,32 +49,36 @@ export function CalendarPage() {
     show(view, parseIsoDate(created.date) ?? date) // jump to the new event's date so the user sees it
   }
 
-  const handleWithdraw = async (event: CalendarEvent) => {
+  const handleRemove = async ({ event, kind }: Removal) => {
+    const done = kind === 'withdraw' ? 'withdrawn' : 'deleted'
     try {
-      await withdraw.mutateAsync(event.id)
-      setMessage({ variant: 'success', text: `"${event.title}" was withdrawn.` })
+      await remove.mutateAsync(event.id)
+      setMessage({ variant: 'success', text: `"${event.title}" was ${done}.` })
     } catch (err) {
-      // e.g. 409: an approver approved it a moment ago
-      setMessage({ variant: 'danger', text: err instanceof Error ? err.message : 'Could not withdraw the event.' })
+      // e.g. 409 on withdraw: an approver approved it a moment ago
+      setMessage({ variant: 'danger', text: err instanceof Error ? err.message : `Could not ${kind} the event.` })
     } finally {
-      setEventToWithdraw(null)
+      setRemoval(null)
     }
   }
 
   return (
     <>
-      <CalendarToolbar
-        view={view}
-        date={date}
-        onPrevious={() => show(view, shiftDate(view, date, -1))}
-        onToday={() => show(view, new Date())}
-        onNext={() => show(view, shiftDate(view, date, 1))}
-        onViewChange={(nextView) => show(nextView, date)} // keeps the selected date
-        onNewEvent={() => {
-          setMessage(null)
-          setIsFormOpen(true)
-        }}
-      />
+      <div className="page-heading">
+        <div>
+          <h1>School Calendar</h1>
+          <p>Keep track of all events through month and day view.</p>
+        </div>
+        <Button
+          onClick={() => {
+            setMessage(null)
+            setIsFormOpen(true)
+          }}
+        >
+          <Icon name="plus" size={17} />
+          New event
+        </Button>
+      </div>
 
       {message && (
         <Alert variant={message.variant} dismissible onClose={() => setMessage(null)}>
@@ -81,35 +87,77 @@ export function CalendarPage() {
       )}
       {isError && <Alert variant="danger">Could not load events: {error.message}</Alert>}
 
-      {isPending ? (
-        <div className="text-center py-5">
-          <Spinner animation="border" role="status" aria-label="Loading events" />
-        </div>
-      ) : view === 'month' ? (
-        <MonthView date={date} events={events} onSelectDay={(day) => show('day', day)} />
-      ) : (
-        <DayView events={events} currentUserId={user?.id} onWithdraw={setEventToWithdraw} />
-      )}
+      <section className="panel" aria-label="Calendar">
+        <CalendarToolbar
+          view={view}
+          date={date}
+          onPrevious={() => show(view, shiftDate(view, date, -1))}
+          onToday={() => show(view, new Date())}
+          onNext={() => show(view, shiftDate(view, date, 1))}
+          onViewChange={(nextView) => show(nextView, date)} // keeps the selected date
+        />
+
+        {isPending ? (
+          <div className="loading">
+            <Spinner animation="border" role="status" aria-label="Loading events" />
+          </div>
+        ) : view === 'month' ? (
+          <MonthView date={date} events={events} onSelectDay={(day) => show('day', day)} />
+        ) : (
+          <DayView
+            events={events}
+            currentUserId={user?.id}
+            canManage={user?.isApprover ?? false}
+            onWithdraw={(event) => setRemoval({ event, kind: 'withdraw' })}
+            onEdit={(event) => {
+              setMessage(null)
+              setEventToEdit(event)
+            }}
+            onDelete={(event) => setRemoval({ event, kind: 'delete' })}
+          />
+        )}
+      </section>
 
       {/* Rendered only while open, so every open starts with a fresh, empty form. */}
       {isFormOpen && (
+        <EventFormModal defaultDate={toIsoDate(date)} onClose={() => setIsFormOpen(false)} onSaved={handleCreated} />
+      )}
+
+      {eventToEdit && (
         <EventFormModal
-          defaultDate={toIsoDate(date)}
-          onClose={() => setIsFormOpen(false)}
-          onSaved={handleCreated}
+          event={eventToEdit}
+          onClose={() => setEventToEdit(null)}
+          onSaved={(saved) => {
+            setEventToEdit(null)
+            setMessage({ variant: 'success', text: `"${saved.title}" was saved.` })
+            show(view, parseIsoDate(saved.date) ?? date) // follow the event if its date changed
+          }}
         />
       )}
 
-      {eventToWithdraw && (
+      {removal?.kind === 'withdraw' && (
         <ConfirmDialog
           title="Withdraw event"
           confirmLabel="Withdraw"
-          isWorking={withdraw.isPending}
-          onConfirm={() => handleWithdraw(eventToWithdraw)}
-          onCancel={() => setEventToWithdraw(null)}
+          isWorking={remove.isPending}
+          onConfirm={() => handleRemove(removal)}
+          onCancel={() => setRemoval(null)}
         >
-          Withdraw your submission <strong>{eventToWithdraw.title}</strong>? It will be removed and approvers will no
+          Withdraw your submission <strong>{removal.event.title}</strong>? It will be removed and approvers will no
           longer see it.
+        </ConfirmDialog>
+      )}
+
+      {removal?.kind === 'delete' && (
+        <ConfirmDialog
+          title="Delete event"
+          confirmLabel="Delete"
+          isWorking={remove.isPending}
+          onConfirm={() => handleRemove(removal)}
+          onCancel={() => setRemoval(null)}
+        >
+          Delete <strong>{removal.event.title}</strong>
+          {removal.event.isApproved ? '' : ` submitted by ${removal.event.creatorName}`}? This cannot be undone.
         </ConfirmDialog>
       )}
     </>

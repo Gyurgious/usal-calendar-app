@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { Alert, Button, Card, Spinner } from 'react-bootstrap'
+import { Alert, Button, Spinner } from 'react-bootstrap'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ApiError } from '../../api/httpClient'
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog'
+import { Icon } from '../../shared/components/Icon'
 import { formatLongDate, formatTime, formatTimestamp } from '../calendar/calendarDates'
 import { EventFormModal } from './EventFormModal'
 import { EventStatusBadge } from './EventStatusBadge'
 import { useApproveEvent, useDeleteEvent, useEvent } from './useEventActions'
+import './events.css'
 
 type Message = { variant: 'success' | 'danger'; text: string }
 
@@ -25,7 +27,7 @@ export function EventDetailsPage() {
 
   if (isPending) {
     return (
-      <div className="text-center py-5">
+      <div className="loading">
         <Spinner animation="border" role="status" aria-label="Loading event" />
       </div>
     )
@@ -40,7 +42,9 @@ export function EventDetailsPage() {
         <Alert variant={notFound ? 'warning' : 'danger'}>
           {notFound ? 'This event does not exist. It may have been deleted.' : `Could not load the event: ${errorText(error)}`}
         </Alert>
-        <Link to="/events">← Back to events</Link>
+        <Link to="/events" className="back-link">
+          ← Back to events
+        </Link>
       </>
     )
   }
@@ -69,7 +73,7 @@ export function EventDetailsPage() {
 
   return (
     <>
-      <Link to="/events" className="d-inline-block mb-3">
+      <Link to="/events" className="back-link">
         ← Back to events
       </Link>
 
@@ -79,53 +83,72 @@ export function EventDetailsPage() {
         </Alert>
       )}
 
-      <Card>
-        <Card.Header className="d-flex flex-wrap gap-2 justify-content-between align-items-center">
-          <h1 className="h4 mb-0">
-            {event.title} <EventStatusBadge isApproved={event.isApproved} />
-          </h1>
-          <div className="d-flex gap-2">
+      <article className="panel">
+        <div className="detail-header">
+          <div>
+            <h1>
+              {event.title} <EventStatusBadge isApproved={event.isApproved} />
+            </h1>
+            <p>
+              {formatLongDate(event.date)} · {formatTime(event.time)}
+              {event.location && ` · ${event.location}`}
+            </p>
+          </div>
+          <div className="detail-actions">
             {!event.isApproved && (
-              <Button size="sm" variant="success" disabled={isBusy} onClick={handleApprove}>
+              <Button size="sm" variant="approve" disabled={isBusy} onClick={handleApprove}>
+                <Icon name="check" size={16} />
                 Approve
               </Button>
             )}
-            <Button size="sm" variant="outline-primary" disabled={isBusy} onClick={() => setIsEditing(true)}>
+            <Button size="sm" variant="outline-secondary" disabled={isBusy} onClick={() => setIsEditing(true)}>
+              <Icon name="edit" size={15} />
               Edit
             </Button>
-            <Button size="sm" variant="outline-danger" disabled={isBusy} onClick={() => setIsConfirmingDelete(true)}>
+            <Button size="sm" variant="soft-danger" disabled={isBusy} onClick={() => setIsConfirmingDelete(true)}>
+              <Icon name="trash" size={15} />
               Delete
             </Button>
           </div>
-        </Card.Header>
-        <Card.Body>
-          <dl className="row mb-0">
-            <dt className="col-sm-3">Date</dt>
-            <dd className="col-sm-9">{formatLongDate(event.date)}</dd>
-            <dt className="col-sm-3">Time</dt>
-            <dd className="col-sm-9">{formatTime(event.time)}</dd>
-            <dt className="col-sm-3">Location</dt>
-            <dd className="col-sm-9">{event.location ?? <span className="text-body-secondary">None</span>}</dd>
-            <dt className="col-sm-3">Description</dt>
-            <dd className="col-sm-9">{event.description ?? <span className="text-body-secondary">None</span>}</dd>
-            <dt className="col-sm-3">Created by</dt>
-            <dd className="col-sm-9">
-              {event.creatorName} <span className="text-body-secondary">on {formatTimestamp(event.createdAtUtc)}</span>
+        </div>
+
+        <dl className="detail-list">
+          <div>
+            <dt>Date</dt>
+            <dd>{formatLongDate(event.date)}</dd>
+          </div>
+          <div>
+            <dt>Time</dt>
+            <dd>{formatTime(event.time)}</dd>
+          </div>
+          <div className="wide">
+            <dt>Location</dt>
+            <dd>{event.location ?? <span className="note">None</span>}</dd>
+          </div>
+          <div className="wide">
+            <dt>Description</dt>
+            <dd>{event.description ?? <span className="note">None</span>}</dd>
+          </div>
+          <div>
+            <dt>Created by</dt>
+            <dd>
+              {event.creatorName} <span className="note">on {formatTimestamp(event.createdAtUtc)}</span>
             </dd>
-            <dt className="col-sm-3">Approved by</dt>
-            <dd className="col-sm-9">
+          </div>
+          <div>
+            <dt>Approved by</dt>
+            <dd>
               {event.approverName && event.approvedAtUtc ? (
                 <>
-                  {event.approverName}{' '}
-                  <span className="text-body-secondary">on {formatTimestamp(event.approvedAtUtc)}</span>
+                  {event.approverName} <span className="note">on {formatTimestamp(event.approvedAtUtc)}</span>
                 </>
               ) : (
-                <span className="text-body-secondary">Not approved yet</span>
+                <span className="note">Not approved yet</span>
               )}
             </dd>
-          </dl>
-        </Card.Body>
-      </Card>
+          </div>
+        </dl>
+      </article>
 
       {isEditing && (
         <EventFormModal

@@ -101,7 +101,7 @@ describe('new user', () => {
     renderApp('/users')
     const user = userEvent.setup()
 
-    await user.click(await screen.findByRole('button', { name: '+ New user' }))
+    await user.click(await screen.findByRole('button', { name: 'New user' }))
     const dialog = await screen.findByRole('dialog')
     await user.type(within(dialog).getByLabelText('First name'), 'Pat')
     await user.type(within(dialog).getByLabelText('Last name'), 'Lee')
@@ -127,7 +127,7 @@ describe('new user', () => {
     renderApp('/users')
     const user = userEvent.setup()
 
-    await user.click(await screen.findByRole('button', { name: '+ New user' }))
+    await user.click(await screen.findByRole('button', { name: 'New user' }))
     const dialog = await screen.findByRole('dialog')
     await user.type(within(dialog).getByLabelText('First name'), 'A'.repeat(26))
     await user.type(within(dialog).getByLabelText('Login name'), 'p.lee')
@@ -149,7 +149,7 @@ describe('new user', () => {
     renderApp('/users')
     const user = userEvent.setup()
 
-    await user.click(await screen.findByRole('button', { name: '+ New user' }))
+    await user.click(await screen.findByRole('button', { name: 'New user' }))
     const dialog = await screen.findByRole('dialog')
     await user.type(within(dialog).getByLabelText('First name'), 'John')
     await user.type(within(dialog).getByLabelText('Last name'), 'Smith')
@@ -209,7 +209,7 @@ describe('edit user', () => {
     expect(bodyOf(fetchMock, 'PUT', '/api/users/1')).toMatchObject({ firstName: 'Maggie', isApprover: true })
     // the navbar shows the new name (it reloads /api/auth/me)
     await waitFor(() => expect(callsTo(fetchMock, 'GET', '/api/auth/me')).toHaveLength(2))
-    expect(within(screen.getByRole('navigation')).getByText(/Thompson, Maggie A/)).toBeInTheDocument()
+    expect(within(screen.getByRole('navigation', { name: 'Main' })).getByText(/Thompson, Maggie A/)).toBeInTheDocument()
   })
 })
 

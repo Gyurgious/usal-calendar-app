@@ -1,10 +1,12 @@
 import { format } from 'date-fns'
 import { useState } from 'react'
-import { Alert, Button, Spinner, Table } from 'react-bootstrap'
+import { Alert, Button, Spinner } from 'react-bootstrap'
 import { ConfirmDialog } from '../../shared/components/ConfirmDialog'
-import { formatTime, parseIsoDate } from '../calendar/calendarDates'
+import { Icon } from '../../shared/components/Icon'
+import { formatTime, formatTimestamp, parseIsoDate } from '../calendar/calendarDates'
 import type { PendingEvent } from '../events/eventsApi'
 import { useApproveEvent, useDeleteEvent, usePendingEvents } from '../events/useEventActions'
+import './approvals.css'
 
 type Message = { variant: 'success' | 'danger'; text: string }
 
@@ -45,7 +47,13 @@ export function ApprovalsPage() {
 
   return (
     <>
-      <h1 className="h3 mb-3">Pending approvals</h1>
+      <div className="page-heading">
+        <div>
+          <h1>Pending Approvals</h1>
+          <p>Review event submissions before they appear on the school calendar.</p>
+        </div>
+        {!isPending && !isError && <span className="count-chip">{pending.length} pending</span>}
+      </div>
 
       {message && (
         <Alert variant={message.variant} dismissible onClose={() => setMessage(null)}>
@@ -54,64 +62,104 @@ export function ApprovalsPage() {
       )}
       {isError && <Alert variant="danger">Could not load pending events: {error.message}</Alert>}
 
-      {isPending ? (
-        <div className="text-center py-5">
-          <Spinner animation="border" role="status" aria-label="Loading pending events" />
+      <section className="panel approvals-panel" aria-labelledby="submitted-title">
+        <div className="panel-title">
+          <h2 id="submitted-title">Submitted events</h2>
+          <p>Approving adds an event to the calendar. A day can hold at most 10 approved events.</p>
         </div>
-      ) : pending.length === 0 ? (
-        <p className="text-body-secondary">No events are waiting for approval.</p>
-      ) : (
-        <Table responsive striped hover className="align-middle">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Title</th>
-              <th>Location</th>
-              <th>Description</th>
-              <th>Submitted by</th>
-              <th>Submitted</th>
-              <th>
-                <span className="visually-hidden">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {pending.map((event) => (
-              <tr key={event.id}>
-                <td className="text-nowrap">{format(parseIsoDate(event.date)!, 'EEE, MMM d, yyyy')}</td>
-                <td className="text-nowrap">{formatTime(event.time)}</td>
-                <td>{event.title}</td>
-                <td>{event.location}</td>
-                <td>{event.description}</td>
-                <td>{event.creatorName}</td>
-                <td className="text-nowrap small">{format(new Date(event.createdAtUtc), 'MMM d, yyyy h:mm a')}</td>
-                <td className="text-nowrap text-end">
-                  <Button
-                    size="sm"
-                    variant="success"
-                    className="me-2"
-                    disabled={isBusy(event.id)}
-                    onClick={() => handleApprove(event)}
-                    aria-label={`Approve ${event.title}`}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline-danger"
-                    disabled={isBusy(event.id)}
-                    onClick={() => setEventToDelete(event)}
-                    aria-label={`Delete ${event.title}`}
-                  >
-                    Delete
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      )}
+
+        {isPending ? (
+          <div className="loading">
+            <Spinner animation="border" role="status" aria-label="Loading pending events" />
+          </div>
+        ) : pending.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <Icon name="check" size={24} />
+            </div>
+            <h3>You’re all caught up</h3>
+            <p>No events are waiting for approval.</p>
+          </div>
+        ) : (
+          <>
+            {/* Column labels for wide screens. Hidden from screen readers: each row's <dl> names its own fields. */}
+            <div className="approval-columns" aria-hidden="true">
+              <span>Event</span>
+              <span>When</span>
+              <span>Submitted by</span>
+            </div>
+            <ul className="approval-list">
+              {pending.map((event) => (
+                <li key={event.id}>
+                  <article className="approval-item">
+                    <div className="request-event">
+                      <div className="request-icon" aria-hidden="true">
+                        <Icon name="calendar" />
+                      </div>
+                      <div>
+                        <h3>{event.title}</h3>
+                        {event.description ? (
+                          <p className="request-description">{event.description}</p>
+                        ) : (
+                          <p className="request-description is-empty">No description</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <dl className="request-details">
+                      <div>
+                        <dt>When</dt>
+                        <dd>
+                          <span className="primary-line">{format(parseIsoDate(event.date)!, 'EEE, MMM d, yyyy')}</span>
+                          <span className="secondary-line">
+                            <span>{formatTime(event.time)}</span>
+                            {event.location && (
+                              <>
+                                {' · '}
+                                <span>{event.location}</span>
+                              </>
+                            )}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Submitted by</dt>
+                        <dd>
+                          <strong className="primary-line">{event.creatorName}</strong>
+                          <span className="secondary-line">{formatTimestamp(event.createdAtUtc)}</span>
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div className="approval-actions">
+                      <Button
+                        size="sm"
+                        variant="approve"
+                        disabled={isBusy(event.id)}
+                        onClick={() => handleApprove(event)}
+                        aria-label={`Approve ${event.title}`}
+                      >
+                        <Icon name="check" size={16} />
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="soft-danger"
+                        disabled={isBusy(event.id)}
+                        onClick={() => setEventToDelete(event)}
+                        aria-label={`Delete ${event.title}`}
+                      >
+                        <Icon name="trash" size={16} />
+                        Delete
+                      </Button>
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
 
       {eventToDelete && (
         <ConfirmDialog

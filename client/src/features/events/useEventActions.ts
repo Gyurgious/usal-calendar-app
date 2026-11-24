@@ -11,9 +11,9 @@ import {
   type EventStatusFilter,
 } from './eventsApi'
 
-/** The approvals list (approvers only). */
-export function usePendingEvents() {
-  return useQuery({ queryKey: eventQueryKeys.pending, queryFn: getPendingEvents })
+/** The approvals list (approvers only). Pass `enabled: false` to skip the request, e.g. for normal users. */
+export function usePendingEvents({ enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({ queryKey: eventQueryKeys.pending, queryFn: getPendingEvents, enabled })
 }
 
 /** The events list (approvers only). */
@@ -21,9 +21,12 @@ export function useEvents(status: EventStatusFilter) {
   return useQuery({ queryKey: eventQueryKeys.list(status), queryFn: () => getEvents(status) })
 }
 
-/** One event's details (approvers only). */
-export function useEvent(id: number) {
-  return useQuery({ queryKey: eventQueryKeys.detail(id), queryFn: () => getEvent(id) })
+/**
+ * One event's details (approvers only). Pass `enabled: false` to only read what is already loaded, without
+ * sending a request; the result still updates when another component loads it.
+ */
+export function useEvent(id: number, { enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({ queryKey: eventQueryKeys.detail(id), queryFn: () => getEvent(id), enabled })
 }
 
 /** helper mutation that refreshes all event data on success, else screens would show old data */

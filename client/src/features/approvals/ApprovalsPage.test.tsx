@@ -57,15 +57,16 @@ afterEach(() => {
 })
 
 describe('ApprovalsPage', () => {
-  it('approvers see the Approvals link and a table of pending submissions', async () => {
+  it('approvers see the Approvals link and a list of pending submissions', async () => {
     setUpApi(admin)
     renderApp('/')
     const user = userEvent.setup()
 
-    await user.click(await screen.findByRole('link', { name: 'Approvals' }))
+    // The link's name may include the pending count once it loads ("Approvals 2").
+    await user.click(await screen.findByRole('link', { name: /^Approvals/ }))
 
-    expect(await screen.findByRole('heading', { name: 'Pending approvals' })).toBeInTheDocument()
-    const row = (await screen.findByText('Robotics Demo')).closest('tr')!
+    expect(await screen.findByRole('heading', { name: /pending approvals/i })).toBeInTheDocument()
+    const row = (await screen.findByText('Robotics Demo')).closest('article')!
     expect(within(row).getByText('Sat, Nov 7, 2026')).toBeInTheDocument()
     expect(within(row).getByText('3:00 PM')).toBeInTheDocument()
     expect(within(row).getByText('Room 101')).toBeInTheDocument()

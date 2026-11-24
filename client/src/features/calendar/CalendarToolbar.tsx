@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import { Button, ButtonGroup } from 'react-bootstrap'
+import { Icon } from '../../shared/components/Icon'
 import type { CalendarView } from './calendarDates'
 
 interface CalendarToolbarProps {
@@ -9,60 +9,49 @@ interface CalendarToolbarProps {
   onToday: () => void
   onNext: () => void
   onViewChange: (view: CalendarView) => void
-  onNewEvent: () => void
 }
 
-/** Prev / Today / Next, the current title, and the Month | Day toggle. */
-export function CalendarToolbar({ 
-  view, 
-  date, 
-  onPrevious, 
-  onToday, 
-  onNext, 
-  onViewChange, 
-  onNewEvent,
-}: CalendarToolbarProps) {
+/** Today / Prev / Next, the current title, and the Month | Day toggle. */
+export function CalendarToolbar({ view, date, onPrevious, onToday, onNext, onViewChange }: CalendarToolbarProps) {
   const unit = view === 'month' ? 'month' : 'day'
 
   return (
-    <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
-      <ButtonGroup>
-        <Button variant="outline-secondary" onClick={onPrevious} aria-label={`Previous ${unit}`}>
-          ‹
-        </Button>
-        <Button variant="outline-secondary" onClick={onToday}>
+    <div className="calendar-toolbar">
+      <div className="date-controls">
+        <button type="button" className="today" onClick={onToday}>
           Today
-        </Button>
-        <Button variant="outline-secondary" onClick={onNext} aria-label={`Next ${unit}`}>
-          ›
-        </Button>
-      </ButtonGroup>
+        </button>
+        <div className="arrows">
+          <button type="button" onClick={onPrevious} aria-label={`Previous ${unit}`}>
+            ‹
+          </button>
+          <button type="button" onClick={onNext} aria-label={`Next ${unit}`}>
+            ›
+          </button>
+        </div>
+        <h2>{view === 'month' ? format(date, 'MMMM yyyy') : format(date, 'EEEE, MMMM d, yyyy')}</h2>
+      </div>
 
-      <h1 className="h4 mb-0 mx-2 flex-grow-1">
-        {view === 'month' ? format(date, 'MMMM yyyy') : format(date, 'EEEE, MMMM d, yyyy')}
-      </h1>
-
-      <ButtonGroup aria-label="Calendar view">
-        <Button
-          variant={view === 'month' ? 'primary' : 'outline-primary'}
+      <div className="view-toggle" role="group" aria-label="Calendar view">
+        <button
+          type="button"
+          className={view === 'month' ? 'selected' : undefined}
           aria-pressed={view === 'month'}
           onClick={() => onViewChange('month')}
         >
+          <Icon name="grid" size={15} />
           Month
-        </Button>
-        <Button
-          variant={view === 'day' ? 'primary' : 'outline-primary'}
+        </button>
+        <button
+          type="button"
+          className={view === 'day' ? 'selected' : undefined}
           aria-pressed={view === 'day'}
           onClick={() => onViewChange('day')}
         >
+          <Icon name="list" size={16} />
           Day
-        </Button>
-      </ButtonGroup>
-
-      <Button variant="success" onClick={onNewEvent}>
-        + New event
-      </Button>
+        </button>
+      </div>
     </div>
-
   )
 }
